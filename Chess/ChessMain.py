@@ -20,26 +20,6 @@ def load_images():
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
-
-'''
-The main driver for our code, this will handle user input and updating the process
-'''
-def main():
-    screen = p.display.set_mode((WIDTH, HEIGHT))
-    clock = p.time.Clock()
-    screen.fill(p.Color("white"))
-    state = ChessEngine.GameState()
-    load_images()
-    running = True
-    while running: 
-        for e in p.event.get():
-            if e.type == p.QUIT:
-                running = False
-        draw_game_state(screen, state)
-        clock.tick(MAX_FPS)
-        p.display.flip()
-
-
 '''
 Responsible for all the graphics on the current game state
 '''
@@ -67,6 +47,39 @@ def draw_pieces(screen, board):
             piece = board[row][col]
             if piece != "..": # not an empty square
                 screen.blit(IMAGES[piece], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+'''
+The main driver for our code, this will handle user input and updating the process
+'''
+def main():
+    screen = p.display.set_mode((WIDTH, HEIGHT))
+    clock = p.time.Clock()
+    screen.fill(p.Color("white"))
+    state = ChessEngine.GameState()
+    load_images()
+    running = True
+    selected_square = () # no square selected, keep track of the last click of theuser (tuple: (row, col))
+    player_clicks = []   # keep track of the player clicks (two tuples: [(row, col) -> (row, col)])
+    while running: 
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() # (x,y) location of mouse
+                col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
+                row =  location[1]//SQ_SIZE
+                if selected_square == (row, col): # the user clicked the same square twice
+                    selected_square = ()
+                    player_clicks = []
+                else:
+                    selected_square = (row, col)
+                    player_clicks.append(selected_square) # append for both 1st and 2nd clock
+                if len(player_clicks) == 2:
+                    player_clicks = []
+                selected_square = (row, col)
+        draw_game_state(screen, state)
+        clock.tick(MAX_FPS)
+        p.display.flip()
 
 if __name__ == "__main__":
     main()
