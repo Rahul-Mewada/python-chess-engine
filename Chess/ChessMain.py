@@ -75,7 +75,12 @@ def main():
                     selected_square = (row, col)
                     player_clicks.append(selected_square) # append for both 1st and 2nd clock
                 if len(player_clicks) == 2:
+                    move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
+                    print(move.get_simple_chess_notation())
+                    state.make_move(move)
+                    selected_square = ()
                     player_clicks = []
+
                 selected_square = (row, col)
         draw_game_state(screen, state)
         clock.tick(MAX_FPS)

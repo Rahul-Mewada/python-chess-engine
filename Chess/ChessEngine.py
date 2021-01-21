@@ -32,17 +32,19 @@ class GameState():
             ]) 
         self.white_to_move = True
         self.move_log = np.array([])
+        self.is_first_move = True
 
     def make_move(self, move):
-        self.board[move.start_row][move.start_row] = ".."
+        self.board[move.start_row][move.start_col] = ".."
         self.board[move.end_row][move.end_col] = move.piece_moved
-        self.move_log.append(move)
-        self.white_to_move = not white_to_move
+        self.move_log = np.append(self.move_log, move)
+        self.white_to_move = not self.white_to_move
+        self.is_first_move = False
 
 class Move():
     rank_to_row = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}
     row_to_rank = {val: key for key, val in rank_to_row.items()}
-    file_to_col = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 8}
+    file_to_col = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     col_to_file = {val: key for key, val in file_to_col.items()}
 
     def __init__(self, start_sq, end_sq, board):
@@ -58,3 +60,4 @@ class Move():
 
     def get_rank_file(self, row, col):
         return self.col_to_file[col] + self.row_to_rank[row]
+
