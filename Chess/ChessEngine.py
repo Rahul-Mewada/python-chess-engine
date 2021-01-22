@@ -31,15 +31,45 @@ class GameState():
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
             ]) 
         self.white_to_move = True
-        self.move_log = np.array([])
+        self.move_log = []             # stack that keeps track of all moves made so far
+        self.redo_move_log = []        # stack that keeps track of all moves undo'ed so far to enable the redo move feature
         self.is_first_move = True
 
+    '''
+    Takes a move as a param and executes it. Will not work for castling, en passant, or pawn promotion
+    '''
     def make_move(self, move):
         self.board[move.start_row][move.start_col] = ".."
         self.board[move.end_row][move.end_col] = move.piece_moved
-        self.move_log = np.append(self.move_log, move)
+        self.move_log.append(self.move)
         self.white_to_move = not self.white_to_move
         self.is_first_move = False
+    
+    '''
+    Reverses the last action and adds the reveresed moved to the redo move stack
+    '''
+    def undo_move(self):
+        if len(self.move_log) >= 1:
+            move_to_undo = self.move_log.pop()
+            self.board[move_to_undo.start_row][move_to_undo.start_col] = move_to_undo.piece_moved
+            self.board[move_to_undo.end_row][move_to_undo.end_col] = move_to_undo.piece_captured
+            self.white_to_move = not self.white_to_move
+            if len(move_log) == 0:
+                self.is_first_move = True
+            self.redo_move_log.append(move_to_undo)
+        else:
+            pass
+
+    def redo_move(self):
+        if len(self.redo_move_log) >= 1:
+            move_to_redo = self.redo_move_log.pop()
+            self.board[move_to_redo.start_row][move_to_redo.start_col] = move_to_redo.piece_captured
+            self.board[move_to_redo.end_row][move_to_redo.end_col] = move_to_redo.piece_moved
+            self.white_to_move = not self.white_to_move
+            self.move_log.append(move_to_redo)
+        else:
+            pass
+            
 
 class Move():
     rank_to_row = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}
@@ -60,4 +90,5 @@ class Move():
 
     def get_rank_file(self, row, col):
         return self.col_to_file[col] + self.row_to_rank[row]
+
 
