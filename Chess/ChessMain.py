@@ -64,6 +64,8 @@ def main():
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            
+            # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() # (x,y) location of mouse
                 col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
@@ -82,6 +84,12 @@ def main():
                     player_clicks = []
 
                 selected_square = (row, col)
+
+            #ket handler
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z: # undo when key 'z' is pressed
+                    state.undo_move()
+                    
         draw_game_state(screen, state)
         clock.tick(MAX_FPS)
         p.display.flip()

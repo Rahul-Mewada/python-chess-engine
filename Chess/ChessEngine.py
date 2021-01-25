@@ -11,7 +11,7 @@ K     -> king
 ex) bK represents a black(b) king(K)
 """
 import numpy as np
-
+import uuid
 
 class GameState():
     def __init__(self):
@@ -41,7 +41,7 @@ class GameState():
     def make_move(self, move):
         self.board[move.start_row][move.start_col] = ".."
         self.board[move.end_row][move.end_col] = move.piece_moved
-        self.move_log.append(self.move)
+        self.move_log.append(move)
         self.white_to_move = not self.white_to_move
         self.is_first_move = False
     
@@ -54,12 +54,15 @@ class GameState():
             self.board[move_to_undo.start_row][move_to_undo.start_col] = move_to_undo.piece_moved
             self.board[move_to_undo.end_row][move_to_undo.end_col] = move_to_undo.piece_captured
             self.white_to_move = not self.white_to_move
-            if len(move_log) == 0:
+            if len(self.move_log) == 0:
                 self.is_first_move = True
             self.redo_move_log.append(move_to_undo)
         else:
             pass
 
+    '''
+    Reverses the last undo move
+    '''
     def redo_move(self):
         if len(self.redo_move_log) >= 1:
             move_to_redo = self.redo_move_log.pop()
@@ -90,5 +93,9 @@ class Move():
 
     def get_rank_file(self, row, col):
         return self.col_to_file[col] + self.row_to_rank[row]
+
+
+
+
 
 
