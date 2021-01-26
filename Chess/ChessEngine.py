@@ -12,6 +12,7 @@ ex) bK represents a black(b) king(K)
 """
 import numpy as np
 import uuid
+import Pieces as p
 
 class GameState():
     def __init__(self):
@@ -20,31 +21,76 @@ class GameState():
         # the first charecter represents the color of the piece
         # the second charecter represents the type of the piece
         # '..' represents an empty tile
-        self.board = np.array([
+        self.string_board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
             ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-            ["..", "..", "..", "..", "..", "..", "..", "..",],
-            ["..", "..", "..", "..", "..", "..", "..", "..",],
-            ["..", "..", "..", "..", "..", "..", "..", "..",],
-            ["..", "..", "..", "..", "..", "..", "..", "..",],
+            [".", ".", ".", ".", ".", ".", ".", ".",],
+            [".", ".", ".", ".", ".", ".", ".", ".",],
+            [".", ".", ".", ".", ".", ".", ".", ".",],
+            [".", ".", ".", ".", ".", ".", ".", ".",],
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-            ]) 
+            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+            ]
+
+        
+
         self.white_to_move = True
         self.move_log = []             # stack that keeps track of all moves made so far
         self.redo_move_log = []        # stack that keeps track of all moves undo'ed so far to enable the redo move feature
         self.is_first_move = True
+        self.white_playable_pieces = []
+        self.black_playable_pieces = []
+        self.captured_pieces = []
 
+        self.board = self.init_board()
+
+    '''
+    Converts a board of strings into a board of Pieces and populates the white and black piece arrays
+    '''
+    def init_board(self):
+        piece_dict = {
+            "P": lambda row, col, board, color: p.Pawn(row, col, board, color),
+            "N": lambda row, col, board, color: p.Knight(row, col, board, color),
+            "B": lambda row, col, board, color: p.Bishop(row, col, board, color),
+            "Q": lambda row, col, board, color: p.Queen(row, col, board, color),
+            "K": lambda row, col, board, color: p.King(row, col, board, color),
+            "R": lambda row, col, board, color: p.Rook(row, col, board, color),
+            ".": lambda row, col, board: p.EmptyPiece(row, col, board)
+        }
+        for row in range(0, 8):
+            for col in range(0,8):
+                piece = self.string_board[row][col]
+                if len(piece) == 2:
+                    piece_color = piece[0]
+                    if piece_color == 'b':
+                        piece_color = "black"
+                    else:
+                        piece_color = "white"
+                    piece_type = piece[1]
+                    self.string_board[row][col] = piece_dict[piece_type](row, col, self.string_board, piece_color)
+                    if piece_color == "black":
+                        self.black_playable_pieces.append(self.string_board[row][col])
+                    else:
+                        self.white_playable_pieces.append(self.string_board[row][col])
+                else:
+                    self.string_board[row][col] = piece_dict[piece](row, col, self.string_board)
+        return self.string_board
+    
     '''
     Takes a move as a param and executes it. Will not work for castling, en passant, or pawn promotion
     '''
     def make_move(self, move):
-        self.board[move.start_row][move.start_col] = ".."
-        self.board[move.end_row][move.end_col] = move.piece_moved
+        self.board[move.start_row][move.start_col] = p.EmptyPiece(move.start_row, move.start_col, self.board)
+        if move.piece_captured.is_empty:
+            self.board[move.end_row][move.end_col] = move.piece_moved
+            move.piece_moved.row = move.end_row
+            move.piece_moved.col = move.end_col
+            move.piece_moved.current_sq = (move.end_row, move.end_col)
+            
         self.move_log.append(move)
         self.white_to_move = not self.white_to_move
         self.is_first_move = False
-    
+
     '''
     Reverses the last action and adds the reveresed moved to the redo move stack
     '''

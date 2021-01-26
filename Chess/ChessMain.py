@@ -10,15 +10,30 @@ WIDTH = HEIGHT = 400
 DIMENSION = 8           # dimension of the board is 8 x 8
 SQ_SIZE = HEIGHT//DIMENSION
 MAX_FPS = 30
-IMAGES = {}
+IMAGES = {
+    ("white", "pawn"): p.transform.scale(p.image.load("images/" + "wP" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("black", "pawn"): p.transform.scale(p.image.load("images/" + "bP" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("white", "rook"): p.transform.scale(p.image.load("images/" + "wR" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("black", "rook"): p.transform.scale(p.image.load("images/" + "bR" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("white", "knight"): p.transform.scale(p.image.load("images/" + "wN" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("black", "knight"): p.transform.scale(p.image.load("images/" + "bN" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("white", "bishop"): p.transform.scale(p.image.load("images/" + "wB" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("black", "bishop"): p.transform.scale(p.image.load("images/" + "bB" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("white", "queen"): p.transform.scale(p.image.load("images/" + "wQ" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("black", "queen"): p.transform.scale(p.image.load("images/" + "bQ" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("white", "king"): p.transform.scale(p.image.load("images/" + "wK" + ".png"), (SQ_SIZE, SQ_SIZE)),
+    ("black", "king"): p.transform.scale(p.image.load("images/" + "bK" + ".png"), (SQ_SIZE, SQ_SIZE))
+}   # dictionary that maps a color and type of a piece to a func that loads the corrosponding image
 
 '''
 Initialize a global dictionary of images, this will be called only once per game
 '''
 def load_images():
-    pieces = ['wP', 'bP', 'wR', 'bR', 'wN', 'bN', 'wB', 'bB', 'wQ', 'bQ', 'wK', 'bK']
-    for piece in pieces:
-        IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
+    # pieces = ['wP', 'bP', 'wR', 'bR', 'wN', 'bN', 'wB', 'bB', 'wQ', 'bQ', 'wK', 'bK']
+    # for piece in pieces:
+    #     IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
+    for key in IMAGES:
+        IMAGES[key]
 
 '''
 Responsible for all the graphics on the current game state
@@ -45,8 +60,8 @@ def draw_pieces(screen, board):
     for row in range(DIMENSION):
         for col in range(DIMENSION):
             piece = board[row][col]
-            if piece != "..": # not an empty square
-                screen.blit(IMAGES[piece], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if not piece.is_empty: # not an empty square
+                screen.blit(IMAGES[(piece.color, piece.name)], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 '''
 The main driver for our code, this will handle user input and updating the process
