@@ -1,8 +1,9 @@
 import ChessEngine as c
 import uuid
 
-class EmptyPiece():
+class Piece():
     def __init__(self, row, col, board):
+        print("piece initialized")
         self.row = row        # row co-ordinate of the piece
         self.col = col        # column co-ordinate of the piece
         self.color = "empty"  # color of the piece
@@ -17,10 +18,9 @@ class EmptyPiece():
             "down-right": lambda row, col, valid_moves, moves_dict: generate_valid_moves((row-1, col+1), valid_moves, moves_dict, "down-right"),
             "down-left": lambda row, col, valid_moves, moves_dict: generate_valid_moves((row-1, col-1), valid_moves, moves_dict, "down-left")
         }                      # dictionary containing the function calls for different directions
-        self.current_sq = (row, col)
-        self.is_empty = True
+        self.current_sq = (self.row, self.col)
         self.is_captured = False
-        self.name = "empty"
+
 
     '''
     Function that returns an array containing all valid moves that a piece can take
@@ -62,18 +62,17 @@ class EmptyPiece():
     '''
     def has_no_opposing_pieces(self, square):
         row, col = square
-        if self.board[row][col].is_empty or self.board[row][col].color != self.color: #if the square if empty or if it has a piece of the opposing color
+        if self.board[row][col] == ".." or self.board[row][col].color != self.color: #if the square if empty or if it has a piece of the opposing color
             return True
         else:
             return False
 
    
 
-class Pawn(EmptyPiece):
+class Pawn(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()
-        self.is_empty = False
         self.color = color
         self.name = "pawn"
 
@@ -88,12 +87,11 @@ class Pawn(EmptyPiece):
                 valid_moves.append(c.Move((self.row, self.col), (self.row+1, self.col-1), self.board))
         return valid_moves
 
-class Knight(EmptyPiece):
+class Knight(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()
         self.color = color
-        self.is_empty = False
         self.name = "knight"
 
     def valid_moves(self):
@@ -108,12 +106,11 @@ class Knight(EmptyPiece):
                 valid_moves.append(c.Move(current_sq, move, self.board))
 
         
-class Bishop(EmptyPiece):
+class Bishop(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()
         self.color = color
-        self.is_empty = False
         self.name = "bishop"
 
     def valid_moves(self):
@@ -127,7 +124,7 @@ class Bishop(EmptyPiece):
         return valid_moves
 
 
-class Rook(EmptyPiece):
+class Rook(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()
@@ -145,7 +142,7 @@ class Rook(EmptyPiece):
 
         return valid_moves
     
-class Queen(EmptyPiece):
+class Queen(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()
@@ -163,7 +160,7 @@ class Queen(EmptyPiece):
 
         return valid_moves
 
-class King(EmptyPiece):
+class King(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()

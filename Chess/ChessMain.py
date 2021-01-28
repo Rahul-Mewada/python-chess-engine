@@ -60,7 +60,7 @@ def draw_pieces(screen, board):
     for row in range(DIMENSION):
         for col in range(DIMENSION):
             piece = board[row][col]
-            if not piece.is_empty: # not an empty square
+            if piece != "..": # not an empty square
                 screen.blit(IMAGES[(piece.color, piece.name)], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 '''
@@ -104,6 +104,8 @@ def main():
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: # undo when key 'z' is pressed
                     state.undo_move()
+                if e.key == p.K_x: # redo when key 'x' is pressed
+                    state.redo_move()
                     
         draw_game_state(screen, state)
         clock.tick(MAX_FPS)

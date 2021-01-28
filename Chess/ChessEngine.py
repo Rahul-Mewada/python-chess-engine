@@ -24,10 +24,10 @@ class GameState():
         self.string_board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
             ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-            [".", ".", ".", ".", ".", ".", ".", ".",],
-            [".", ".", ".", ".", ".", ".", ".", ".",],
-            [".", ".", ".", ".", ".", ".", ".", ".",],
-            [".", ".", ".", ".", ".", ".", ".", ".",],
+            ["..", "..", "..", "..", "..", "..", "..", "..",],
+            ["..", "..", "..", "..", "..", "..", "..", "..",],
+            ["..", "..", "..", "..", "..", "..", "..", "..",],
+            ["..", "..", "..", "..", "..", "..", "..", "..",],
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
             ]
@@ -55,12 +55,11 @@ class GameState():
             "Q": lambda row, col, board, color: p.Queen(row, col, board, color),
             "K": lambda row, col, board, color: p.King(row, col, board, color),
             "R": lambda row, col, board, color: p.Rook(row, col, board, color),
-            ".": lambda row, col, board: p.EmptyPiece(row, col, board)
         }
         for row in range(0, 8):
             for col in range(0,8):
                 piece = self.string_board[row][col]
-                if len(piece) == 2:
+                if piece != "..":
                     piece_color = piece[0]
                     if piece_color == 'b':
                         piece_color = "black"
@@ -72,21 +71,39 @@ class GameState():
                         self.black_playable_pieces.append(self.string_board[row][col])
                     else:
                         self.white_playable_pieces.append(self.string_board[row][col])
-                else:
-                    self.string_board[row][col] = piece_dict[piece](row, col, self.string_board)
         return self.string_board
     
+    def change_cords(self, piece, row, col, to_capture):
+        piece.row = row
+        piece.col = col
+        piece.current_sq = (row, col)
+        if to_capture:
+            piece.is_captured = True
+
+    def do_coords_match(self):
+        for row in range(len(self.board)):
+            for col in range(len(self.board)):
+                piece = self.board[row][col]
+                if piece != "..":
+                    if piece.row != row and piece.col != col:
+                        return False
+        return True
     '''
     Takes a move as a param and executes it. Will not work for castling, en passant, or pawn promotion
     '''
     def make_move(self, move):
-        self.board[move.start_row][move.start_col] = p.EmptyPiece(move.start_row, move.start_col, self.board)
-        if move.piece_captured.is_empty:
-            self.board[move.end_row][move.end_col] = move.piece_moved
-            move.piece_moved.row = move.end_row
-            move.piece_moved.col = move.end_col
-            move.piece_moved.current_sq = (move.end_row, move.end_col)
-            
+        piece_moved = self.board[move.start_row][move.start_col]
+        piece_captured = self.board[move.end_row][move.end_col]
+        self.board[move.start_row][move.start_col] = ".." # adds an empty piece to the starting row and col of the move
+        if piece_captured != "..":                                  # if the square where the piece wants to go has another piece
+            self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
+            if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
+                self.captured_pieces.append(self.pop_piece(piece_captured, self.black_playable_pieces))
+            else:
+                self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
+
+        self.board[move.end_row][move.end_col] = piece_moved
+        self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
         self.white_to_move = not self.white_to_move
         self.is_first_move = False
@@ -96,29 +113,40 @@ class GameState():
     '''
     def undo_move(self):
         if len(self.move_log) >= 1:
-            move_to_undo = self.move_log.pop()
-            self.board[move_to_undo.start_row][move_to_undo.start_col] = move_to_undo.piece_moved
-            self.board[move_to_undo.end_row][move_to_undo.end_col] = move_to_undo.piece_captured
-            self.white_to_move = not self.white_to_move
+            undo = self.move_log.pop()
+            piece_moved = undo.piece_moved
+            piece_captured = undo.piece_captured
+            self.board[undo.start_row][undo.start_col] = piece_moved
+            self.change_cords(piece_moved, undo.start_row, undo.start_col, False)
+            self.board[undo.end_row][undo.end_col] = piece_captured
+            self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
+            piece_removed = self.captured_pieces.pop()
+
+            if piece_removed.color == "black":
+                self.black_playable_pieces.append(piece_removed)
+            else:
+                self.white_playable_pieces.append(piece_removed)
+
             if len(self.move_log) == 0:
                 self.is_first_move = True
-            self.redo_move_log.append(move_to_undo)
-        else:
-            pass
+            self.redo_move_log.append(undo)
 
     '''
     Reverses the last undo move
     '''
     def redo_move(self):
         if len(self.redo_move_log) >= 1:
-            move_to_redo = self.redo_move_log.pop()
-            self.board[move_to_redo.start_row][move_to_redo.start_col] = move_to_redo.piece_captured
-            self.board[move_to_redo.end_row][move_to_redo.end_col] = move_to_redo.piece_moved
-            self.white_to_move = not self.white_to_move
-            self.move_log.append(move_to_redo)
+            redo = self.redo_move_log.pop()
+            self.make_move(redo)
         else:
             pass
-            
+
+    def pop_piece(self, piece, arr):
+        found_piece = False
+        for element in arr:
+            if element.id == piece.id:
+                return arr.pop(arr.index(element))
+    
 
 class Move():
     rank_to_row = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}
