@@ -96,13 +96,13 @@ def main():
                             pass
                         else:
                             move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
-                            print("Square 1: " + str(player_clicks[0]))
-                            print("Square 2: " + str(player_clicks[1]))
-                            print("Piece captured: " + str(move.piece_captured))
-                            print("Piece moved: " + str(move.piece_moved))
                             piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                            print("Piece selected: " + str(piece_selected.name))
                             list_of_moves = piece_selected.possible_moves()
+                            print("selected move: " + str(player_clicks[1]))
+                            print("Valid Moves shown below")
                             for element in list_of_moves:
+                                print(str((element.end_row, element.end_col)))
                                 if move == element:
                                     state.make_move(move)
                                     break

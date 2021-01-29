@@ -115,16 +115,17 @@ class Knight(Piece):
         self.name = "knight"
 
     def possible_moves(self):
-        possible_moves = [
+        print("Checking for valid moves")
+        list_possible_moves = [
             (self.row+2, self.col+1), (self.row+2,self.col-1), (self.row+1, self.col+2), (self.row+1, self.col-2),
             (self.row-2, self.col+1), (self.row-2, self.col-1), (self.row-1,self.col+2), (self.row-1, self.col-2)
             ]
         current_sq = (self.row, self.col)
-        list_possible_moves = []
+        valid_moves = []
         for move in list_possible_moves:
             if self.is_valid_square(move):
-                list_possible_moves.append(c.Move(current_sq, move, self.board))
-
+                valid_moves.append(c.Move(current_sq, move, self.board))
+        return valid_moves
         
 class Bishop(Piece):
     def __init__(self, row, col, board, color):
