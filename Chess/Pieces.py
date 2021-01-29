@@ -8,14 +8,14 @@ class Piece():
         self.color = "empty"  # color of the piece
         self.board = board    # state of the board
         self.moves_dict = {
-            "up": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row+1, col), possible_moves, moves_dict, "up"),
-            "down": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row-1, col), possible_moves, moves_dict, "down"),
-            "right": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row, col+1), possible_moves, moves_dict, "right"),
-            "left": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row, col-1), possible_moves, moves_dict, "left"),
-            "up-right": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row+1, col+1), possible_moves, moves_dict, "up-right"),
-            "up-left": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row+1, col-1), possible_moves, moves_dict, "up-left"),
-            "down-right": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row-1, col+1), possible_moves, moves_dict, "down-right"),
-            "down-left": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves((row-1, col-1), possible_moves, moves_dict, "down-left")
+            "up": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row+1, col, possible_moves, moves_dict, "up"),
+            "down": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row-1, col, possible_moves, moves_dict, "down"),
+            "right": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row, col+1, possible_moves, moves_dict, "right"),
+            "left": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row, col-1, possible_moves, moves_dict, "left"),
+            "up-right": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row+1, col+1, possible_moves, moves_dict, "up-right"),
+            "up-left": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row+1, col-1, possible_moves, moves_dict, "up-left"),
+            "down-right": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row - 1, col+1, possible_moves, moves_dict, "down-right"),
+            "down-left": lambda row, col, possible_moves, moves_dict: self.generate_possible_moves(row-1, col-1, possible_moves, moves_dict, "down-left")
         }                      # dictionary containing the function calls for different directions
         self.current_sq = (self.row, self.col)
         self.is_captured = False
@@ -39,12 +39,14 @@ class Piece():
     '''
     Private function used to process the valid moves of pieces that move on a row, column or diagonal basis (eg: queen, bishop and knight)
     '''
-    def generate_possible_moves(self, end_sq, possible_moves, moves_dict, direction):
-        row, col = end_sq
+    def generate_possible_moves(self, row, col, possible_moves, moves_dict, direction):
+        end_sq = (row, col)
         if not (self.is_valid_square(end_sq)):
             return
         possible_moves.append(c.Move(self.current_sq, end_sq, self.board))
-        return self.moves_dict[direction]()
+        if self.board[row][col] != ".." and self.board[row][col].color != self.color: # if the piece is of an opposing color
+            return
+        return self.moves_dict[direction](row, col, possible_moves, moves_dict)
 
     '''
     Returns true if the square (row, col) passed is in the bounds of the chess board
@@ -81,6 +83,9 @@ class Pawn(Piece):
             return self.in_bounds(square)
         return False
 
+    '''
+    Returns all possible moves that the particular piece can take. Not accounting for potential checkmates or en passant
+    '''
     def possible_moves(self):
         possible_moves = []
         if self.color == "black":
@@ -88,7 +93,7 @@ class Pawn(Piece):
             two_forward = (self.row + 2, self.col)
             diag_right = (self.row + 1, self.col + 1)
             diag_left = (self.row + 1, self.col -1)
-            if self.row == 1 and self.is_valid_square(two_forward):
+            if self.row == 1 and self.is_valid_square(two_forward) and self.is_valid_square(one_forward):
                 possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
             
         if self.color == "white":
@@ -96,7 +101,7 @@ class Pawn(Piece):
             two_forward = (self.row - 2, self.col)
             diag_right = (self.row - 1, self.col - 1)
             diag_left = (self.row - 1, self.col + 1)
-            if self.row == 6 and self.is_valid_square(two_forward):
+            if self.row == 6 and self.is_valid_square(two_forward) and self.is_valid_square(one_forward):
                 possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
             
         if self.is_valid_square(one_forward):
@@ -114,6 +119,9 @@ class Knight(Piece):
         self.color = color
         self.name = "knight"
 
+    '''
+    Returns all possible moves that a knight can take. Not accounting for potential checks or checkmates.
+    '''
     def possible_moves(self):
         print("Checking for valid moves")
         list_possible_moves = [
@@ -134,13 +142,16 @@ class Bishop(Piece):
         self.color = color
         self.name = "bishop"
 
+    '''
+    Returns all possible moves that a bishop can take. Not accounting for potential checks or checkmates.
+    '''
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
-        possible_moves = ["up", "down", "right", "left"]
+        possible_directions = ["up-right", "up-left", "down-right", "down-left"]
         
-        for move in possible_moves:
-            self.moves_dict[move](self.row, self.col, possible_moves, self.moves_dict)
+        for direction in possible_directions:
+            self.moves_dict[direction](self.row, self.col, possible_moves, self.moves_dict)
 
         return possible_moves
 
@@ -156,10 +167,10 @@ class Rook(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
-        possible_moves = ["up", "down", "right", "left"]
+        possible_directions = ["up", "down", "right", "left"]
         
-        for move in possible_moves:
-            self.moves_dict[move](self.row, self.col, possible_moves, self.moves_dict)
+        for direction in possible_directions:
+            self.moves_dict[direction](self.row, self.col, possible_moves, self.moves_dict)
 
         return possible_moves
     
@@ -174,10 +185,10 @@ class Queen(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
-        possible_moves = ["up", "down", "right", "left", "up-right", "up-left", "down-right", "down-left"]
+        possible_directions = ["up", "down", "right", "left", "up-right", "up-left", "down-right", "down-left"]
         
-        for move in possible_moves:
-            self.moves_dict[move](self.row, self.col, possible_moves, self.moves_dict)
+        for direction in possible_directions:
+            self.moves_dict[direction](self.row, self.col, possible_moves, self.moves_dict)
 
         return possible_moves
 
@@ -192,14 +203,14 @@ class King(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
-        possible_moves = [
+        possible_directions = [
             (self.row+1,self.col), (self.row+1, self.col+1), (self.row+1, self.col-1),
             (self.row-1, self.col), (self.row-1, self.col+1), (self.row-1, self.col-1),
             (self.row, self.col-1), (self.row, self.col + 1)
         ]
         
-        for move in possible_moves:
-            if(self.in_bounds(move) and self.has_no_opposing_pieces(move)):
-                possible_moves.append(c.Move(current_sq, move, self.board))
+        for direction in possible_directions:
+            if(self.in_bounds(direction) and self.has_no_opposing_pieces(direction)):
+                possible_moves.append(c.Move(current_sq, direction, self.board))
 
         return possible_moves
