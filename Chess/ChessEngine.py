@@ -73,13 +73,29 @@ class GameState():
                         self.white_playable_pieces.append(self.string_board[row][col])
         return self.string_board
     
+    def gen_all_possible_moves(self):
+        pass
+
+    def gen_all_valid_moves(self):
+        moves = []
+        if self.white_to_move:
+            for piece in self.white_playable_pieces:
+                moves.append(piece.valid_moves)
+
+    '''
+    Helper function that changes a particular pieces variables
+    '''
     def change_cords(self, piece, row, col, to_capture):
+        print(piece)
         piece.row = row
         piece.col = col
         piece.current_sq = (row, col)
         if to_capture:
             piece.is_captured = True
 
+    '''
+    Checks if the board state representation and the piece's coordinates match
+    '''
     def do_coords_match(self):
         for row in range(len(self.board)):
             for col in range(len(self.board)):
@@ -119,8 +135,9 @@ class GameState():
             self.board[undo.start_row][undo.start_col] = piece_moved
             self.change_cords(piece_moved, undo.start_row, undo.start_col, False)
             self.board[undo.end_row][undo.end_col] = piece_captured
-            self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
-            piece_removed = self.captured_pieces.pop()
+            if piece_captured != "..":
+                self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
+            piece_removed = self.captured_pieces.pop() # need to check for when the captured piece list is empty
 
             if piece_removed.color == "black":
                 self.black_playable_pieces.append(piece_removed)
@@ -130,6 +147,7 @@ class GameState():
             if len(self.move_log) == 0:
                 self.is_first_move = True
             self.redo_move_log.append(undo)
+
 
     '''
     Reverses the last undo move
@@ -141,6 +159,9 @@ class GameState():
         else:
             pass
 
+    '''
+    Removes and returns a particular piece from a list
+    '''
     def pop_piece(self, piece, arr):
         found_piece = False
         for element in arr:
@@ -161,6 +182,12 @@ class Move():
         self.end_col = end_sq[1]
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
+        self.id = self.start_row*1000 + self.start_col*100 + self.end_row*10 + self.end_col
+    
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return self.id == other.id
+        return False
 
     def get_simple_chess_notation(self):
         return self.get_rank_file(self.start_row, self.start_col) + self.get_rank_file(self.end_row, self.end_col)

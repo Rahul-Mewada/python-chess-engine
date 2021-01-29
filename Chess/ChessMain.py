@@ -85,20 +85,30 @@ def main():
                 location = p.mouse.get_pos() # (x,y) location of mouse
                 col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
                 row =  location[1]//SQ_SIZE
-                if selected_square == (row, col): # the user clicked the same square twice
-                    selected_square = ()
-                    player_clicks = []
+                if state.board[row][col] == ".." and len(player_clicks) == 0: # user selected an empty square first
+                    pass
                 else:
                     selected_square = (row, col)
-                    player_clicks.append(selected_square) # append for both 1st and 2nd clock
-                if len(player_clicks) == 2:
-                    move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
-                    print(move.get_simple_chess_notation())
-                    state.make_move(move)
-                    selected_square = ()
-                    player_clicks = []
+                    player_clicks.append(selected_square)
 
-                selected_square = (row, col)
+                    if len(player_clicks) == 2:
+                        if player_clicks[0] == player_clicks[1]:
+                            pass
+                        else:
+                            move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
+                            print("Square 1: " + str(player_clicks[0]))
+                            print("Square 2: " + str(player_clicks[1]))
+                            print("Piece captured: " + str(move.piece_captured))
+                            print("Piece moved: " + str(move.piece_moved))
+                            piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                            list_of_moves = piece_selected.possible_moves()
+                            for element in list_of_moves:
+                                if move == element:
+                                    state.make_move(move)
+                                    break
+                        selected_square = ()
+                        player_clicks = []
+
 
             #ket handler
             elif e.type == p.KEYDOWN:
