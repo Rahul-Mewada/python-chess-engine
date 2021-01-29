@@ -137,12 +137,12 @@ class GameState():
             self.board[undo.end_row][undo.end_col] = piece_captured
             if piece_captured != "..":
                 self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
-            piece_removed = self.captured_pieces.pop() # need to check for when the captured piece list is empty
-
-            if piece_removed.color == "black":
-                self.black_playable_pieces.append(piece_removed)
-            else:
-                self.white_playable_pieces.append(piece_removed)
+            if len(self.captured_pieces) != 0:
+                piece_removed = self.captured_pieces.pop() 
+                if piece_removed.color == "black":
+                    self.black_playable_pieces.append(piece_removed)
+                else:
+                    self.white_playable_pieces.append(piece_removed)
 
             if len(self.move_log) == 0:
                 self.is_first_move = True

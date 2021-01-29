@@ -75,16 +75,36 @@ class Pawn(Piece):
         self.color = color
         self.name = "pawn"
 
+    def is_valid_square(self, square):
+        row, col = square
+        if self.board[row][col] == "..":
+            return self.in_bounds(square)
+        return False
+
     def possible_moves(self):
         possible_moves = []
         if self.color == "black":
             one_forward = (self.row + 1, self.col)
-            two_forward = (self.row + 1, self.col)
-            diag_down_right = (self.row + 1, self.col + 1)
-            if self.is_valid_square(one_forward):
-                possible_moves.append(c.Move((self.row, self.col), one_forward, self.board))
+            two_forward = (self.row + 2, self.col)
+            diag_right = (self.row + 1, self.col + 1)
+            diag_left = (self.row + 1, self.col -1)
             if self.row == 1 and self.is_valid_square(two_forward):
                 possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
+            
+        if self.color == "white":
+            one_forward = (self.row - 1, self.col)
+            two_forward = (self.row - 2, self.col)
+            diag_right = (self.row - 1, self.col - 1)
+            diag_left = (self.row - 1, self.col + 1)
+            if self.row == 6 and self.is_valid_square(two_forward):
+                possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
+            
+        if self.is_valid_square(one_forward):
+            possible_moves.append(c.Move((self.row, self.col), one_forward, self.board))
+        if self.in_bounds(diag_right) and self.board[diag_right[0]][diag_right[1]] != ".." and self.board[diag_right[0]][diag_right[1]].color != self.color:
+            possible_moves.append(c.Move((self.row, self.col), diag_right, self.board))
+        if self.in_bounds(diag_left) and self.board[diag_left[0]][diag_left[1]] != ".." and self.board[diag_left[0]][diag_left[1]].color != self.color:
+            possible_moves.append(c.Move((self.row, self.col), diag_left, self.board))
         return possible_moves
 
 class Knight(Piece):
@@ -100,10 +120,10 @@ class Knight(Piece):
             (self.row-2, self.col+1), (self.row-2, self.col-1), (self.row-1,self.col+2), (self.row-1, self.col-2)
             ]
         current_sq = (self.row, self.col)
-        possible_moves = []
-        for move in possible_moves:
-            if self.in_bounds(move) and self.has_no_opposing_pieces(move):
-                possible_moves.append(c.Move(current_sq, move, self.board))
+        list_possible_moves = []
+        for move in list_possible_moves:
+            if self.is_valid_square(move):
+                list_possible_moves.append(c.Move(current_sq, move, self.board))
 
         
 class Bishop(Piece):
