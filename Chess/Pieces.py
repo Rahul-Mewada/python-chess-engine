@@ -19,6 +19,7 @@ class Piece():
         }                      # dictionary containing the function calls for different directions
         self.current_sq = (self.row, self.col)
         self.is_captured = False
+        self.attacked_sqs = []
 
 
     '''
@@ -45,7 +46,7 @@ class Piece():
             return
         possible_moves.append(c.Move(self.current_sq, end_sq, self.board))
         if self.board[row][col] != ".." and self.board[row][col].color != self.color: # if the piece is of an opposing color
-            return
+            return 
         return self.moves_dict[direction](row, col, possible_moves, moves_dict)
 
     '''
@@ -68,6 +69,11 @@ class Piece():
         else:
             return False
 
+    '''
+    Generates the squares that a piece currently threatens the opposite king 
+    '''
+    def find_attacked_sqs(self):
+        pass
    
 
 class Pawn(Piece):
@@ -132,6 +138,7 @@ class Knight(Piece):
         valid_moves = []
         for move in list_possible_moves:
             if self.is_valid_square(move):
+                possible_king = self.board[move[0]][move[1]]
                 valid_moves.append(c.Move(current_sq, move, self.board))
         return valid_moves
         

@@ -41,7 +41,8 @@ class GameState():
         self.white_playable_pieces = []
         self.black_playable_pieces = []
         self.captured_pieces = []
-
+        self.white_king_sq = self.find_white_king_position()
+        self.black_king_sq = self.find_black_king_position()
         self.board = self.init_board()
 
     '''
@@ -168,6 +169,21 @@ class GameState():
             if element.id == piece.id:
                 return arr.pop(arr.index(element))
     
+    '''
+    Returns the position of the white king
+    '''
+    def find_white_king_position(self):
+        for piece in  self.white_playable_pieces:
+            if piece.name == "king":
+                return (piece.row, piece.col)
+    
+    '''
+    Returns the position of the black king
+    '''
+    def find_black_king_position(self):
+        for piece in self.black_playable_pieces:
+            if piece.name == "king":
+                return (piece.row, piece.col)
 
 class Move():
     rank_to_row = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}
