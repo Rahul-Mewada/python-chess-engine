@@ -99,6 +99,7 @@ def main():
                             piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
                             print("Piece selected: " + str(piece_selected.name))
                             list_of_moves = piece_selected.possible_moves()
+                            
                             print("selected move: " + str(player_clicks[1]))
                             print("Valid Moves shown below")
                             for element in list_of_moves:
