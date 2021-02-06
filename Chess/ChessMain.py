@@ -52,7 +52,22 @@ def draw_board(screen):
             color = colors[((row + col) % 2)]
             p.draw.rect(screen, color, p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
-
+'''
+Highlights the square selected and moves for piece selected
+'''
+def highlight_squares(screen, state, valid_moves, selected_square):
+    if selected_square != () and valid_moves != []:
+        row, col = selected_square
+        if state.board[row][col] != "..": # add the color stuff 
+            # highlight the selected square
+            s = p.Surface((SQ_SIZE, SQ_SIZE))
+            s.set_alpha(100) # transparency value -> 0 transparent, 255 opaque
+            s.fill(p.Color('blue'))
+            screen.blit(s, (col*SQ_SIZE, row*SQ_SIZE))
+            # highlight moves from that square
+            s.fill(p.Color('yellow'))
+            for move in valid_moves:
+                screen.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
 '''
 Draw the pieces on the board using the current GameState.board
 '''
@@ -75,6 +90,7 @@ def main():
     running = True
     selected_square = () # no square selected, keep track of the last click of theuser (tuple: (row, col))
     player_clicks = []   # keep track of the player clicks (two tuples: [(row, col) -> (row, col)])
+    list_of_moves = []
     while running: 
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -91,19 +107,18 @@ def main():
                     selected_square = (row, col)
                     player_clicks.append(selected_square)
 
+                    if player_clicks != [] and player_clicks[0] != "..":
+                        piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                        list_of_moves = piece_selected.possible_moves()
+
                     if len(player_clicks) == 2:
                         if player_clicks[0] == player_clicks[1]:
                             pass
                         else:
                             move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
-                            piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
-                            print("Piece selected: " + str(piece_selected.name))
-                            list_of_moves = piece_selected.possible_moves()
-                            
-                            print("selected move: " + str(player_clicks[1]))
-                            print("Valid Moves shown below")
+                            #piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                            #list_of_moves = piece_selected.possible_moves()
                             for element in list_of_moves:
-                                print(str((element.end_row, element.end_col)))
                                 if move == element:
                                     state.make_move(move)
                                     break
@@ -118,7 +133,12 @@ def main():
                 if e.key == p.K_x: # redo when key 'x' is pressed
                     state.redo_move()
                     
-        draw_game_state(screen, state)
+        
+        #draw_game_state(screen, state)
+        draw_board(screen)               # draw squares on the board
+        highlight_squares(screen, state, list_of_moves, selected_square)
+        draw_pieces(screen, state.board)
+        
         clock.tick(MAX_FPS)
         p.display.flip()
 

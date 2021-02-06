@@ -39,12 +39,9 @@ class GameState():
         self.white_playable_pieces = []
         self.black_playable_pieces = []
         self.captured_pieces = []
-        self.white_king_sq = self.find_white_king_position()
-        self.black_king_sq = self.find_black_king_position()
+        self.white_king_sq = self.find_king_pos("white")
+        self.black_king_sq = self.find_king_pos("black")
         self.board = self.init_board()
-        self.in_check = False
-        self.pins = []
-        self.checks = []
         self.direc_dict = {
             "up": lambda row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction: \
                 self.direction_search(row-1, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, "up"),
@@ -201,11 +198,14 @@ class GameState():
                 if piece.name == "king":
                     return (piece.row, piece.col)
 
+    '''
+    Returns the pieces that are pinned and checked and the direction from which they are being attacked
+    '''
     def check_for_pins_and_checks(self):
         if self.white_to_move:
             start_row, start_col = self.find_king_pos("white")
             color = "white"
-            for piece in self.whites_playable_pieces:
+            for piece in self.white_playable_pieces:
                 piece.is_pinned = False
                 piece.pin_direction = ()
                 if piece.name == "king":
@@ -214,7 +214,7 @@ class GameState():
         else:
             start_row, start_col = self.find_king_pos("black")
             color = "black"
-            for piece in self.blacks_playable_pieces:
+            for piece in self.black_playable_pieces:
                 piece.is_pinned = False
                 piece.pin_direction = ()
                 if piece.name == "king":
@@ -226,18 +226,21 @@ class GameState():
         checks = []
         in_check = False
         for direction in possible_directions:
-            in_check, pins, checks = self.direc_dict[direction](start_row, start_col, color, pins, [], checks, in_check, direction)
-        
+            in_check, pins, checks = self.direc_dict[direction](start_row, start_col, 0, color, pins, [], checks, in_check, direction)
+
         possible_knight_directions = [
-            (self.row+2, self.col+1), (self.row+2,self.col-1), (self.row+1, self.col+2), (self.row+1, self.col-2),
-            (self.row-2, self.col+1), (self.row-2, self.col-1), (self.row-1,self.col+2), (self.row-1, self.col-2)
+            (start_row+2, start_col+1), (start_row+2, start_col-1), (start_row+1, start_col+2), (start_row+1, start_col-2),
+            (start_row-2, start_col+1), (start_row-2, start_col-1), (start_row-1, start_col+2), (start_row-1, start_col-2)
         ]
 
         for direction in possible_knight_directions:
-            possible_piece = self.board[direction[0]][direction[1]]
-            if possible_piece != ".." and possible_piece.color != color and possible_piece.name == "knight":
-                in_check = True
-                checks.append(possible_piece, direction)
+            row, col = direction
+            if (0 <= row < 8 and 0 <= col < 8):
+                print(row, col)
+                possible_piece = self.board[row][col]
+                if possible_piece != ".." and possible_piece.color != color and possible_piece.name == "knight":
+                    in_check = True
+                    checks.append(possible_piece, direction)
         
         if in_check:
             self.board[start_row][start_col].is_checked = True
@@ -246,13 +249,14 @@ class GameState():
         return in_check, pins, checks
 
     def direction_search(self, row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction):
-        if not 0 <= row < 8 and 0 <= col < 8: # return if out of bounds
+        if not (0 <= row < 8 and 0 <= col < 8): # return if out of bounds
             return in_check, pinned_pieces, pieces_that_check
+
         count += 1
         pot_piece = self.board[row][col]
         if pot_piece != ".." and pot_piece.color == color: # if the piece is of the same color, then it might be a pinned piece
             if possible_pinned == []:
-                possible_pinned.append(pot_piece, direction)
+                possible_pinned.append((pot_piece, direction))
             else: # if it is the second piece 
                 return in_check, pinned_pieces, pieces_that_check
         elif pot_piece != ".." and pot_piece.color != color: # if the piece is an enemy piece
@@ -285,9 +289,9 @@ class GameState():
         return self.direc_dict[direction](row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction)
             
                 
-    def get_valid_moves(self):
+    def get_valid_moves(self, piece):
         moves = []
-        self.in_check, self.pins, self.checks = self.check_for_pins_and_checks()
+        in_check, pins, checks = self.check_for_pins_and_checks()
         dir_to_tuple = {
             "up": (-1,0),
             "down": (1, 0),
@@ -302,11 +306,12 @@ class GameState():
             king_row, king_col = self.find_king_pos("white")
         else:
             king_row, king_col = self.find_king_pos("black")
-        if self.in_check:
-            if len(self.checks) == 1: # only 1 check, block check or move king
-                moves = self.get_possible_moves()
-                check_piece = self.checks[0]
-                check_direction = self.checks[1]
+
+        if in_check:
+            if len(checks) == 1: # only 1 check, block check or move king
+                moves = piece.possible_moves()
+                check_piece = checks[0]
+                check_direction = checks[1]
                 check_row = check_piece.row
                 check_col = check_piece.col
                 valid_squares = []
@@ -316,15 +321,21 @@ class GameState():
                     for i in range(1,8):
                         valid_square = (king_row + dir_to_tuple[check_direction][0] * i, \
                              king_col + dir_to_tuple[check_direction][1] * i)
-                        valid_squares.appen(valid_square)
+                        valid_squares.append(valid_square)
                         if valid_square[0] == check_row and valid_square[1] == check_col:
                             break
                 for i in range(len(moves) - 1, -1, -1):
                     if moves[i].piece_moved.name != "king":
                         if not (moves[i].end_row, moves[i].end_col) in valid_squares:
-                            moves.remove(moves[i])
+                            moves.possible(moves[i])
             else:
-                # add the king moves
+                if piece.name == "king":
+                    moves = piece.possible_moves()
+        else:
+            moves = piece.possible_moves()
+
+        return moves
+
 
 
     def get_possible_moves(self):
