@@ -103,7 +103,6 @@ class GameState():
     Helper function that changes a particular pieces variables
     '''
     def change_cords(self, piece, row, col, to_capture):
-        print(piece)
         piece.row = row
         piece.col = col
         piece.current_sq = (row, col)
@@ -236,11 +235,10 @@ class GameState():
         for direction in possible_knight_directions:
             row, col = direction
             if (0 <= row < 8 and 0 <= col < 8):
-                print(row, col)
                 possible_piece = self.board[row][col]
                 if possible_piece != ".." and possible_piece.color != color and possible_piece.name == "knight":
                     in_check = True
-                    checks.append(possible_piece, direction)
+                    checks.append((possible_piece, direction))
         
         if in_check:
             self.board[start_row][start_col].is_checked = True
@@ -259,15 +257,17 @@ class GameState():
                 possible_pinned.append((pot_piece, direction))
             else: # if it is the second piece 
                 return in_check, pinned_pieces, pieces_that_check
+
         elif pot_piece != ".." and pot_piece.color != color: # if the piece is an enemy piece
             if (pot_piece.name == "rook" and (direction == "up" or direction == "down" or direction == "right" or direction == "left")) or \
                 (pot_piece.name == "bishop" and (direction == "up-right" or direction == "up-left" or direction == "down-right" or direction == "down-left")) or \
                     pot_piece.name == "queen" or (pot_piece.name == "king" and count <=1):
                 if possible_pinned == []:
                     is_check = True
-                    pieces_that_check.append(pot_piece, direction)
+                    pieces_that_check.append((pot_piece, direction))
                 else:
-                    for piece in possible_pinned:
+                    for element in possible_pinned:
+                        piece = element[0]
                         piece.is_pinned = True
                         piece.pin_direction = direction
                     pinned_pieces.append(possible_pinned)
@@ -276,7 +276,7 @@ class GameState():
                 (count <= 1 and pot_piece.name == "pawn" and pot_piece.color == "white" and (direction == "down-right" or direction == "down-left")): # if the piece is a pawn
                 if possible_pinned == []:
                     is_check = True
-                    pieces_that_check.append(pot_piece, direction)
+                    pieces_that_check.append((pot_piece, direction))
                 else:
                     for piece in possible_pinned:
                         piece.is_pinned = True
@@ -307,14 +307,25 @@ class GameState():
         else:
             king_row, king_col = self.find_king_pos("black")
 
+        if piece.name == "king": # filters moves that would lead to a king into a check
+            possible_moves = piece.possible_moves()
+            for move in possible_moves: # for every possible move, make it and check if it results in a check or not
+                self.make_move(move)
+                future_in_check, future_pins, future_checks = self.check_for_pins_and_checks()
+                self.undo_move()
+                if not future_in_check:    
+                    moves.append(move)
+        else: # if not a king then add all possible moves it can make
+            moves = piece.possible_moves()
+
         if in_check:
             if len(checks) == 1: # only 1 check, block check or move king
-                moves = piece.possible_moves()
                 check_piece = checks[0]
                 check_direction = checks[1]
                 check_row = check_piece.row
                 check_col = check_piece.col
                 valid_squares = []
+
                 if check_piece.name == "knight":
                     valid_squares = [(check_row, check_col)]
                 else:
@@ -324,15 +335,16 @@ class GameState():
                         valid_squares.append(valid_square)
                         if valid_square[0] == check_row and valid_square[1] == check_col:
                             break
+
                 for i in range(len(moves) - 1, -1, -1):
                     if moves[i].piece_moved.name != "king":
                         if not (moves[i].end_row, moves[i].end_col) in valid_squares:
-                            moves.possible(moves[i])
-            else:
+                            moves.remove(moves[i])
+            else: # if there are 1+ checks only return moves if the piece selected is a king
                 if piece.name == "king":
-                    moves = piece.possible_moves()
-        else:
-            moves = piece.possible_moves()
+                    return moves
+                else:
+                    return []
 
         return moves
 

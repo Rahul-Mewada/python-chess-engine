@@ -91,25 +91,44 @@ def main():
     selected_square = () # no square selected, keep track of the last click of theuser (tuple: (row, col))
     player_clicks = []   # keep track of the player clicks (two tuples: [(row, col) -> (row, col)])
     list_of_moves = []
+    state.white_to_move = True
     while running: 
         for e in p.event.get():
+            
             if e.type == p.QUIT:
                 running = False
-            
             # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
+
+                white_pinned = 0
+                black_pinned = 0
+                for piece in state.white_playable_pieces:
+                    if piece.is_pinned:
+                        white_pinned += 1
+                for piece in state.black_playable_pieces:
+                    if piece.is_pinned:
+                        black_pinned +=1 
+
+                print()
+                print("whites pinned: " + str(white_pinned))
+                print("blacks pinned: " + str(black_pinned))
+                print()
+                
                 location = p.mouse.get_pos() # (x,y) location of mouse
                 col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
                 row =  location[1]//SQ_SIZE
                 if state.board[row][col] == ".." and len(player_clicks) == 0: # user selected an empty square first
                     pass
+                elif len(player_clicks) == 0 and ((not state.white_to_move and state.board[row][col].color == "white") or \
+                    (state.white_to_move and state.board[row][col].color == "black")):
+                    pass
                 else:
                     selected_square = (row, col)
                     player_clicks.append(selected_square)
 
-                    if player_clicks != [] and player_clicks[0] != "..":
+                    if player_clicks != [] and state.board[player_clicks[0][0]][player_clicks[0][1]] != "..":
                         piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
-                        list_of_moves = piece_selected.possible_moves()
+                        list_of_moves = state.get_valid_moves(piece_selected)
 
                     if len(player_clicks) == 2:
                         if player_clicks[0] == player_clicks[1]:

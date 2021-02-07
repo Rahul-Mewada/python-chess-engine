@@ -21,7 +21,7 @@ class Piece():
         self.is_captured = False
         self.is_pinned = False
         self.pin_direction = ()
-        self.opp_direciton = {
+        self.opp_direction = {
             "up": "down",
             "down": "up",
             "left": "right",
@@ -107,16 +107,16 @@ class Pawn(Piece):
             diag_left = (self.row + 1, self.col -1)
 
             if self.is_valid_square(one_forward):
-                if not self.is_pinned or pin_direction == "down":
+                if not self.is_pinned or self.pin_direction == "down":
                     possible_moves.append(c.Move((self.row, self.col), one_forward, self.board))
                     if self.row == 1 and self.is_valid_square(two_forward):
                         possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
 
             if self.in_bounds(diag_right) and self.board[diag_right[0]][diag_right[1]] != ".." and self.board[diag_right[0]][diag_right[1]].color != self.color:
-                if not self.is_pinned or pin_direction == "down-right":
+                if not self.is_pinned or self.pin_direction == "down-right":
                     possible_moves.append(c.Move((self.row, self.col), diag_right, self.board))
             if self.in_bounds(diag_left) and self.board[diag_left[0]][diag_left[1]] != ".." and self.board[diag_left[0]][diag_left[1]].color != self.color:
-                if not self.is_pinned or pin_direction == "down-left":
+                if not self.is_pinned or self.pin_direction == "down-left":
                     possible_moves.append(c.Move((self.row, self.col), diag_left, self.board))
             
         if self.color == "white":
@@ -126,16 +126,16 @@ class Pawn(Piece):
             diag_left = (self.row - 1, self.col - 1)
 
             if self.is_valid_square(one_forward):
-                if not self.is_pinned or pin_direction == "up":
+                if not self.is_pinned or self.pin_direction == "up":
                     possible_moves.append(c.Move((self.row, self.col), one_forward, self.board))
                     if self.row == 6 and self.is_valid_square(two_forward):
                         possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
 
             if self.in_bounds(diag_right) and self.board[diag_right[0]][diag_right[1]] != ".." and self.board[diag_right[0]][diag_right[1]].color != self.color:
-                if not self.is_pinned or pin_direction == "up-right":
+                if not self.is_pinned or self.pin_direction == "up-right":
                     possible_moves.append(c.Move((self.row, self.col), diag_right, self.board))
             if self.in_bounds(diag_left) and self.board[diag_left[0]][diag_left[1]] != ".." and self.board[diag_left[0]][diag_left[1]].color != self.color:
-                if not self.is_pinned or pin_direction == "up-left":
+                if not self.is_pinned or self.pin_direction == "up-left":
                     possible_moves.append(c.Move((self.row, self.col), diag_left, self.board))
     
         return possible_moves
@@ -229,8 +229,7 @@ class King(Piece):
         self.color = color
         self.is_empty = False
         self.name = "king"
-    
-
+        
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
@@ -242,10 +241,6 @@ class King(Piece):
         
         for direction in possible_directions:
             if(self.in_bounds(direction) and self.has_no_opposing_pieces(direction)):
-                self.board.make_move(c.Move(current_sq, direction, self.board))
-                in_check, pins, checks = self.board.check_for_pins_and_checks()
-                self.board.undo_move()
-                if not in_check:
-                    possible_moves.append(c.Move(current_sq, direction, self.board))
+                possible_moves.append(c.Move(current_sq, direction, self.board))
                 
         return possible_moves
