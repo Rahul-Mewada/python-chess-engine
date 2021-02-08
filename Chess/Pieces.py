@@ -54,7 +54,7 @@ class Piece():
         end_sq = (row, col)
         if not (self.is_valid_square(end_sq)):
             return
-        if not self.is_pinned or self.pin_direction == direction or self.opp_direction[pin_direction] == direction:
+        if not self.is_pinned or self.pin_direction == direction or self.opp_direction[self.pin_direction] == direction:
             possible_moves.append(c.Move(self.current_sq, end_sq, self.board))
         if self.board[row][col] != ".." and self.board[row][col].color != self.color: # if the piece is of an opposing color
             return 

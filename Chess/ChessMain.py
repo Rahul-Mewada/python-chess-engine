@@ -55,7 +55,7 @@ def draw_board(screen):
 '''
 Highlights the square selected and moves for piece selected
 '''
-def highlight_squares(screen, state, valid_moves, selected_square):
+def highlight_squares(screen, state, valid_moves, selected_square, invalid_sq):
     if selected_square != () and valid_moves != []:
         row, col = selected_square
         if state.board[row][col] != "..": # add the color stuff 
@@ -68,6 +68,13 @@ def highlight_squares(screen, state, valid_moves, selected_square):
             s.fill(p.Color('yellow'))
             for move in valid_moves:
                 screen.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
+
+    if invalid_sq != ():
+        row, col = invalid_sq
+        s = p.Surface((SQ_SIZE, SQ_SIZE))
+        s.set_alpha(100) # transparency value -> 0 transparent, 255 opaque
+        s.fill(p.Color('red'))
+        screen.blit(s, (col*SQ_SIZE, row*SQ_SIZE))
 '''
 Draw the pieces on the board using the current GameState.board
 '''
@@ -92,6 +99,7 @@ def main():
     player_clicks = []   # keep track of the player clicks (two tuples: [(row, col) -> (row, col)])
     list_of_moves = []
     state.white_to_move = True
+    invalid_sq = ()
     while running: 
         for e in p.event.get():
             
@@ -108,11 +116,9 @@ def main():
                 for piece in state.black_playable_pieces:
                     if piece.is_pinned:
                         black_pinned +=1 
+                
+                in_check, pins, checks = state.check_for_pins_and_checks()
 
-                print()
-                print("whites pinned: " + str(white_pinned))
-                print("blacks pinned: " + str(black_pinned))
-                print()
                 
                 location = p.mouse.get_pos() # (x,y) location of mouse
                 col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
@@ -121,14 +127,18 @@ def main():
                     pass
                 elif len(player_clicks) == 0 and ((not state.white_to_move and state.board[row][col].color == "white") or \
                     (state.white_to_move and state.board[row][col].color == "black")):
+                    invalid_sq = (row, col)
+                    print("invalid")
                     pass
                 else:
+                    invalid_sq = ()
                     selected_square = (row, col)
                     player_clicks.append(selected_square)
-
                     if player_clicks != [] and state.board[player_clicks[0][0]][player_clicks[0][1]] != "..":
                         piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
                         list_of_moves = state.get_valid_moves(piece_selected)
+                        if len(list_of_moves) == 0:
+                            invalid_sq = (player_clicks[0][0], player_clicks[0][1])
 
                     if len(player_clicks) == 2:
                         if player_clicks[0] == player_clicks[1]:
@@ -155,7 +165,7 @@ def main():
         
         #draw_game_state(screen, state)
         draw_board(screen)               # draw squares on the board
-        highlight_squares(screen, state, list_of_moves, selected_square)
+        highlight_squares(screen, state, list_of_moves, selected_square, invalid_sq)
         draw_pieces(screen, state.board)
         
         clock.tick(MAX_FPS)

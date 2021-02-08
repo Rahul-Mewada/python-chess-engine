@@ -162,6 +162,7 @@ class GameState():
 
             if len(self.move_log) == 0:
                 self.is_first_move = True
+            self.white_to_move = not self.white_to_move
             self.redo_move_log.append(undo)
 
 
@@ -242,7 +243,8 @@ class GameState():
         
         if in_check:
             self.board[start_row][start_col].is_checked = True
-            self.board[start_row][start_col].check_direction = checks[1]
+            for check in checks:
+                self.board[start_row][start_col].check_direction = check[1]
 
         return in_check, pins, checks
 
@@ -320,8 +322,8 @@ class GameState():
 
         if in_check:
             if len(checks) == 1: # only 1 check, block check or move king
-                check_piece = checks[0]
-                check_direction = checks[1]
+                check_piece = checks[0][0]
+                check_direction = checks[0][1]
                 check_row = check_piece.row
                 check_col = check_piece.col
                 valid_squares = []
