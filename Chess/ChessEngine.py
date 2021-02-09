@@ -60,6 +60,7 @@ class GameState():
             "up-right": lambda row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction: \
                 self.direction_search(row-1, col+1, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, "up-right")
         }
+        self.enpassant = ()
  # def direction_search(self, row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction):
     '''
     Converts a board of strings into a board of Pieces and populates the white and black piece arrays
@@ -118,6 +119,7 @@ class GameState():
                 piece = self.board[row][col]
                 if piece != "..":
                     if piece.row != row and piece.col != col:
+                        print(piece.name)
                         return False
         return True
     '''
@@ -131,14 +133,34 @@ class GameState():
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
             if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
                 self.captured_pieces.append(self.pop_piece(piece_captured, self.black_playable_pieces))
+                print("black piece captured: " + piece_captured.name)
             else:
                 self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
-
+                print("white piece captured: " + str(piece_captured.name))
         self.board[move.end_row][move.end_col] = piece_moved
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
         self.white_to_move = not self.white_to_move
         self.is_first_move = False
+
+        if move.is_pawn_promo:
+            # add a queen in it's place
+            replacement_piece = p.Queen(move.end_row, move.end_col, self.board, piece_moved.color)
+            self.board[move.end_row][move.end_col] = replacement_piece
+
+            # adding the replacement piece to the playable pieces array 
+            if replacement_piece.color == "white":
+                self.white_playable_pieces.append(replacement_piece)
+            else:
+                self.black_playable_pieces.append(replacement_piece)
+
+            # remove the pawn from the board
+            temp_piece = piece_moved
+            self.change_cords(temp_piece, 8, 8, True)
+            # if temp_piece.color == "black":
+            #     self.captured_pieces.append(self.pop_piece(temp_piece, self.black_playable_pieces))
+            # else:
+            #     self.captured_pieces.append(self.pop_piece(temp_piece, self.white_playable_pieces))
 
     '''
     Reverses the last action and adds the reveresed moved to the redo move stack
@@ -164,6 +186,27 @@ class GameState():
                 self.is_first_move = True
             self.white_to_move = not self.white_to_move
             self.redo_move_log.append(undo)
+
+            if undo.is_pawn_promo:
+                replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color)
+                self.board[undo.start_row][undo.start_col] = replacement_piece
+                
+                # adding the pawn to the pieces on the board
+                if replacement_piece.color == "white":
+                    self.white_playable_pieces.append(replacement_piece)
+                else:
+                    self.black_playable_pieces.append(replacement_piece)
+
+                # removing the queen from the board
+                temp_piece = piece_moved
+                self.change_cords(piece_moved, 8,8, True)
+                # if temp_piece.color == "black":
+                #     self.captured_pieces.append(self.pop_piece(temp_piece, self.black_playable_pieces))
+                # else:
+                #     self.captured_pieces.append(self.pop_piece(temp_piece, self.white_playable_pieces))
+                
+
+
 
 
     '''
@@ -342,14 +385,22 @@ class GameState():
                     if moves[i].piece_moved.name != "king":
                         if not (moves[i].end_row, moves[i].end_col) in valid_squares:
                             moves.remove(moves[i])
+                if len(moves) == 0:
+                    pass #checkmate
             else: # if there are 1+ checks only return moves if the piece selected is a king
                 if piece.name == "king":
+                    if len(moves) == 0:
+                        pass #checkmate
                     return moves
                 else:
                     return []
-
+        elif len(moves) == 0:
+            pass
+            # stalemate
         return moves
 
+    def create_pawn_promo_move(self, start_sq, end_sq, board):
+        pass
 
 
     def get_possible_moves(self):
@@ -376,6 +427,13 @@ class Move():
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
         self.id = self.start_row*1000 + self.start_col*100 + self.end_row*10 + self.end_col
+        self.is_enpassant = False
+        self.is_pawn_promo = False
+        self.is_castle = False
+        if self.piece_moved.name == "pawn" and self.piece_moved.color == "white" and self.end_row == 0:
+            self.is_pawn_promo = True
+        elif self.piece_moved.name == "pawn" and self.piece_moved.color == "black" and self.end_row == 7:
+            self.is_pawn_promo = True
     
     def __eq__(self, other):
         if isinstance(other, Move):
