@@ -41,6 +41,7 @@ class GameState():
         self.captured_pieces = []
         self.white_king_sq = self.find_king_pos("white")
         self.black_king_sq = self.find_king_pos("black")
+        self.special_move_mem = Memory()
         self.board = self.init_board()
         self.direc_dict = {
             "up": lambda row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction: \
@@ -60,14 +61,14 @@ class GameState():
             "up-right": lambda row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction: \
                 self.direction_search(row-1, col+1, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, "up-right")
         }
-        self.enpassant = ()
+        
  # def direction_search(self, row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction):
     '''
     Converts a board of strings into a board of Pieces and populates the white and black piece arrays
     '''
     def init_board(self):
         piece_dict = {
-            "P": lambda row, col, board, color: p.Pawn(row, col, board, color),
+            "P": lambda row, col, board, color: p.Pawn(row, col, board, color, self.special_move_mem),
             "N": lambda row, col, board, color: p.Knight(row, col, board, color),
             "B": lambda row, col, board, color: p.Bishop(row, col, board, color),
             "Q": lambda row, col, board, color: p.Queen(row, col, board, color),
@@ -157,11 +158,26 @@ class GameState():
             # remove the pawn from the board
             temp_piece = piece_moved
             self.change_cords(temp_piece, 8, 8, True)
-            # if temp_piece.color == "black":
-            #     self.captured_pieces.append(self.pop_piece(temp_piece, self.black_playable_pieces))
-            # else:
-            #     self.captured_pieces.append(self.pop_piece(temp_piece, self.white_playable_pieces))
 
+        if move.is_enpassant == True: 
+            print("enpassant")
+            piece_captured = self.board[move.start_row][move.end_col]
+            print(piece_captured)
+            self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
+            if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
+                self.captured_pieces.append(self.pop_piece(piece_captured, self.black_playable_pieces))
+                print("black piece captured: " + piece_captured.name)
+            else:
+                self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
+                print("white piece captured: " + str(piece_captured.name))
+            self.board[move.start_row][move.end_col] = ".."
+
+        
+        # update the enpassant square if a pawn is moved
+        if piece_moved.name == "pawn" and abs(move.start_row - move.end_row) == 2:
+            self.special_move_mem.enpassant_sq = ((move.start_row + move.end_row)//2, move.end_col)
+        else: # reset the enpassant square
+            self.special_move_mem.enpassant_sq = ()
     '''
     Reverses the last action and adds the reveresed moved to the redo move stack
     '''
@@ -200,10 +216,6 @@ class GameState():
                 # removing the queen from the board
                 temp_piece = piece_moved
                 self.change_cords(piece_moved, 8,8, True)
-                # if temp_piece.color == "black":
-                #     self.captured_pieces.append(self.pop_piece(temp_piece, self.black_playable_pieces))
-                # else:
-                #     self.captured_pieces.append(self.pop_piece(temp_piece, self.white_playable_pieces))
                 
 
 
@@ -419,7 +431,7 @@ class Move():
     file_to_col = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     col_to_file = {val: key for key, val in file_to_col.items()}
 
-    def __init__(self, start_sq, end_sq, board):
+    def __init__(self, start_sq, end_sq, board, is_enpassant = False):
         self.start_row = start_sq[0]
         self.start_col = start_sq[1]
         self.end_row = end_sq[0]
@@ -427,13 +439,10 @@ class Move():
         self.piece_moved = board[self.start_row][self.start_col]
         self.piece_captured = board[self.end_row][self.end_col]
         self.id = self.start_row*1000 + self.start_col*100 + self.end_row*10 + self.end_col
-        self.is_enpassant = False
-        self.is_pawn_promo = False
+        self.is_enpassant = is_enpassant
+        self.is_pawn_promo = self.is_pawn_promo()
         self.is_castle = False
-        if self.piece_moved.name == "pawn" and self.piece_moved.color == "white" and self.end_row == 0:
-            self.is_pawn_promo = True
-        elif self.piece_moved.name == "pawn" and self.piece_moved.color == "black" and self.end_row == 7:
-            self.is_pawn_promo = True
+
     
     def __eq__(self, other):
         if isinstance(other, Move):
@@ -446,6 +455,21 @@ class Move():
     def get_rank_file(self, row, col):
         return self.col_to_file[col] + self.row_to_rank[row]
 
+        
+    '''
+    Returns true if a move is a pawn promotion
+    '''    
+    def is_pawn_promo(self):
+        if self.piece_moved.name == "pawn" and self.piece_moved.color == "white" and self.end_row == 0:
+            self.is_pawn_promo = True
+        elif self.piece_moved.name == "pawn" and self.piece_moved.color == "black" and self.end_row == 7:
+            self.is_pawn_promo = True
+
+
+class Memory():
+    def __init__(self):
+        self.enpassant_sq = () # co-ordinates of a square where an en passant move is possible
+        self.castle = False
 
 
 

@@ -83,11 +83,12 @@ class Piece():
 
 
 class Pawn(Piece):
-    def __init__(self, row, col, board, color):
+    def __init__(self, row, col, board, color, special_moves):
         super().__init__(row, col, board)
         self.id = uuid.uuid1()
         self.color = color
         self.name = "pawn"
+        self.special_moves = special_moves
 
     def is_valid_square(self, square):
         row, col = square
@@ -106,12 +107,13 @@ class Pawn(Piece):
             diag_right = (self.row + 1, self.col + 1)
             diag_left = (self.row + 1, self.col -1)
 
+            # foreward moves
             if self.is_valid_square(one_forward):
                 if not self.is_pinned or self.pin_direction == "down":
                     possible_moves.append(c.Move((self.row, self.col), one_forward, self.board))
                     if self.row == 1 and self.is_valid_square(two_forward):
                         possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
-
+            # regular captures
             if self.in_bounds(diag_right) and self.board[diag_right[0]][diag_right[1]] != ".." and self.board[diag_right[0]][diag_right[1]].color != self.color:
                 if not self.is_pinned or self.pin_direction == "down-right":
                     possible_moves.append(c.Move((self.row, self.col), diag_right, self.board))
@@ -119,18 +121,28 @@ class Pawn(Piece):
                 if not self.is_pinned or self.pin_direction == "down-left":
                     possible_moves.append(c.Move((self.row, self.col), diag_left, self.board))
             
+            # enpassant captures
+            if self.in_bounds(diag_right) and diag_right == self.special_moves.enpassant_sq:
+                if not self.is_pinned or self.pin_direction == "down-right":
+                    possible_moves.append(c.Move((self.row, self.col), diag_right, self.board, is_enpassant = True))
+            if self.in_bounds(diag_left) and diag_left == self.special_moves.enpassant_sq:
+                if not self.is_pinned or self.pin_direction == "down-left":
+                    possible_moves.append(c.Move((self.row, self.col), diag_left, self.board, is_enpassant = True))
+            
         if self.color == "white":
             one_forward = (self.row - 1, self.col)
             two_forward = (self.row - 2, self.col)
             diag_right = (self.row - 1, self.col + 1)
             diag_left = (self.row - 1, self.col - 1)
 
+            # forward moves
             if self.is_valid_square(one_forward):
                 if not self.is_pinned or self.pin_direction == "up":
                     possible_moves.append(c.Move((self.row, self.col), one_forward, self.board))
                     if self.row == 6 and self.is_valid_square(two_forward):
                         possible_moves.append(c.Move((self.row, self.col), two_forward, self.board))
 
+            # regular captures
             if self.in_bounds(diag_right) and self.board[diag_right[0]][diag_right[1]] != ".." and self.board[diag_right[0]][diag_right[1]].color != self.color:
                 if not self.is_pinned or self.pin_direction == "up-right":
                     possible_moves.append(c.Move((self.row, self.col), diag_right, self.board))
@@ -138,6 +150,14 @@ class Pawn(Piece):
                 if not self.is_pinned or self.pin_direction == "up-left":
                     possible_moves.append(c.Move((self.row, self.col), diag_left, self.board))
     
+            # enpassant captures
+            if self.in_bounds(diag_right) and diag_right == self.special_moves.enpassant_sq:
+                if not self.is_pinned or self.pin_direction == "up-right":
+                    possible_moves.append(c.Move((self.row, self.col), diag_right, self.board, is_enpassant=True))
+            if self.in_bounds(diag_left) and diag_left == self.special_moves.enpassant_sq:
+                if not self.is_pinned or self.pin_direction == "up-left":
+                    possible_moves.append(c.Move((self.row, self.col), diag_left, self.board, is_enpassant=True))
+
         return possible_moves
 
 class Knight(Piece):
