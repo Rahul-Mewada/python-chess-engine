@@ -128,6 +128,8 @@ class GameState():
     '''
     def make_move(self, move):
         piece_moved = self.board[move.start_row][move.start_col]
+        if piece_moved == "..":
+            print("something is wrong")
         piece_captured = self.board[move.end_row][move.end_col]
         self.board[move.start_row][move.start_col] = ".." # adds an empty piece to the starting row and col of the move
         if piece_captured != "..":                                  # if the square where the piece wants to go has another piece
@@ -139,6 +141,7 @@ class GameState():
                 self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
                 print("white piece captured: " + str(piece_captured.name))
         self.board[move.end_row][move.end_col] = piece_moved
+        print(piece_moved)
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
         self.white_to_move = not self.white_to_move
@@ -160,9 +163,7 @@ class GameState():
             self.change_cords(temp_piece, 8, 8, True)
 
         if move.is_enpassant == True: 
-            print("enpassant")
             piece_captured = self.board[move.start_row][move.end_col]
-            print(piece_captured)
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
             if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
                 self.captured_pieces.append(self.pop_piece(piece_captured, self.black_playable_pieces))
@@ -171,6 +172,7 @@ class GameState():
                 self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
                 print("white piece captured: " + str(piece_captured.name))
             self.board[move.start_row][move.end_col] = ".."
+            move.piece_captured = piece_captured
 
         
         # update the enpassant square if a pawn is moved
@@ -189,6 +191,7 @@ class GameState():
             self.board[undo.start_row][undo.start_col] = piece_moved
             self.change_cords(piece_moved, undo.start_row, undo.start_col, False)
             self.board[undo.end_row][undo.end_col] = piece_captured
+
             if piece_captured != "..":
                 self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
             if len(self.captured_pieces) != 0:
@@ -216,11 +219,18 @@ class GameState():
                 # removing the queen from the board
                 temp_piece = piece_moved
                 self.change_cords(piece_moved, 8,8, True)
-                
+
+            if undo.is_enpassant:
+
+                self.board[undo.end_row][undo.end_col] = ".."
+                self.board[undo.start_row][undo.end_col] = undo.piece_captured
+                self.change_cords(piece_captured, undo.start_row, undo.end_col, False)
 
 
 
 
+
+            
     '''
     Reverses the last undo move
     '''

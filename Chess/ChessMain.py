@@ -149,7 +149,7 @@ def main():
                             #list_of_moves = piece_selected.possible_moves()
                             for element in list_of_moves:
                                 if move == element:
-                                    state.make_move(move)
+                                    state.make_move(element)
                                     break
                         selected_square = ()
                         player_clicks = []
