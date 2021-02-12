@@ -264,3 +264,5 @@ class King(Piece):
                 possible_moves.append(c.Move(current_sq, direction, self.board))
                 
         return possible_moves
+
+    

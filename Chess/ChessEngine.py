@@ -61,7 +61,8 @@ class GameState():
             "up-right": lambda row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction: \
                 self.direction_search(row-1, col+1, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, "up-right")
         }
-        
+        self.current_castle_state = CastlingRights(True, True, True, True)
+        self.castling_log = [CastlingRights(True, True, True, True)]
  # def direction_search(self, row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction):
     '''
     Converts a board of strings into a board of Pieces and populates the white and black piece arrays
@@ -180,6 +181,16 @@ class GameState():
             self.special_move_mem.enpassant_sq = ((move.start_row + move.end_row)//2, move.end_col)
         else: # reset the enpassant square
             self.special_move_mem.enpassant_sq = ()
+
+        self.update_castling_rights(move)
+        self.castling_log.append(CastlingRights(
+                                                self.current_castle_state.white_kingside,
+                                                self.current_castle_state.white_queenside, 
+                                                self.current_castle_state.black_kingside,
+                                                self.current_castle_state.black_queenside
+                                                )
+                                )
+
     '''
     Reverses the last action and adds the reveresed moved to the redo move stack
     '''
@@ -221,12 +232,54 @@ class GameState():
                 self.change_cords(piece_moved, 8,8, True)
 
             if undo.is_enpassant:
-
                 self.board[undo.end_row][undo.end_col] = ".."
                 self.board[undo.start_row][undo.end_col] = undo.piece_captured
                 self.change_cords(piece_captured, undo.start_row, undo.end_col, False)
+            
+            # undo castle log
+            self.castling_log.pop()
+            self.current_castle_state.white_kingside = self.castling_log[-1].white_kingside
+            self.current_castle_state.white_queenside = self.castling_log[-1].white_queenside
+            self.current_castle_state.black_kingside = self.castling_log[-1].black_kingside
+            self.current_castle_state.black_queenside = self.castling_log[-1].black_queenside
 
+    def update_castle_rights(self, move):
+        piece_moved = move.piece_moved
+        if piece_moved.name == "king":
+            if piece_moved.color == "black":
+                self.current_castle_state.black_kingside = False
+                self.current_castle_state.black_queenside = False
+            else:
+                self.current_castle_state.white_kingside = False
+                self.current_castle_state.white_queenside = False
 
+        elif piece_moved.name = "rook":
+            if piece_moved.color == "black":
+                if move.start_row == 0:
+                    if move.start_col == 0:
+                        self.current_castle_state.black_queenside = False
+                    elif move.start_col == 7:
+                        self.current_castle_state.black_kingside = False
+            else:
+                if move.start_row == 7:
+                    if move.start_col == 0:
+                        self.current_castle_state.white_queenside = False
+                    elif move.start_col ==7:
+                        self.current_castle_state.white_kingside = False
+
+        if piece_captured.name == "rook":
+                if piece_captured.color == "black":
+                    if move.end_row == 0:
+                        if move.end_col == 0:
+                            self.current_castle_state.black_queenside = False
+                        elif move.end_col == 7:
+                            self.current_castle_state.black_kingside = False
+                else:
+                    if move.end_row == 7:
+                        if move.end_col == 0:
+                            self.current_castle_state.white_queenside = False
+                        elif move.end_col == 7:
+                            self.current_castle_state.white_kingside = False
 
 
 
@@ -476,10 +529,21 @@ class Move():
             self.is_pawn_promo = True
 
 
-class Memory():
+def get_castle_moves(self, king):
+    
+
+
+
+class Memory(): #TODO: Change the name to represent enpassant
     def __init__(self):
         self.enpassant_sq = () # co-ordinates of a square where an en passant move is possible
-        self.castle = False
+
+class CastlingRights()
+    def __init__(self, wks, wqs, bks, bqs):
+        self.white_kingside = wks # stores the castling rights for each side of the king
+        self.white_queenside = wqs
+        self.black_kingside = bks
+        self.black_queenside = bqs
 
 
 
