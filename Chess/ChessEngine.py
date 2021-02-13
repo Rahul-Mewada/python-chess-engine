@@ -182,7 +182,23 @@ class GameState():
         else: # reset the enpassant square
             self.special_move_mem.enpassant_sq = ()
 
-        self.update_castling_rights(move)
+        if move.is_castle:
+            if move.end_col - move.start_col == 2: # kingside castle move
+                rook = self.board[move.end_row][move.start_col+3]
+                color = rook.color
+                self.board[move.end_row][move.end_col + 3] = ".." # assign the square on the board as empty
+                self.board[move.end_row][move.end_col-1] = rook # update the board with the new rook position
+                rook.row = move.end_row # update the piece co-ordinates
+                rook.col = move.end_col-1
+            else:
+                rook = self.board[move.end_row][move.start_col-4]
+                color = rook.color
+                self.board[move.end_row][move.end_col-4] = ".."
+                self.board[move.end_row][move.end_col+1] = rook
+                rook.row = move.end_row
+                rook.col = move.end_col+1
+
+        self.update_castle_rights(move)
         self.castling_log.append(CastlingRights(
                                                 self.current_castle_state.white_kingside,
                                                 self.current_castle_state.white_queenside, 
@@ -236,6 +252,10 @@ class GameState():
                 self.board[undo.start_row][undo.end_col] = undo.piece_captured
                 self.change_cords(piece_captured, undo.start_row, undo.end_col, False)
             
+            # if undo.is_castle:
+            #     if undo.end_col - undo.start_col == 2: #kingside castle
+            #         rook = self.board[undo.end_row][undo.]
+
             # undo castle log
             self.castling_log.pop()
             self.current_castle_state.white_kingside = self.castling_log[-1].white_kingside
@@ -245,6 +265,7 @@ class GameState():
 
     def update_castle_rights(self, move):
         piece_moved = move.piece_moved
+        piece_captured = move.piece_captured
         if piece_moved.name == "king":
             if piece_moved.color == "black":
                 self.current_castle_state.black_kingside = False
@@ -253,7 +274,7 @@ class GameState():
                 self.current_castle_state.white_kingside = False
                 self.current_castle_state.white_queenside = False
 
-        elif piece_moved.name = "rook":
+        elif piece_moved.name == "rook":
             if piece_moved.color == "black":
                 if move.start_row == 0:
                     if move.start_col == 0:
@@ -267,7 +288,7 @@ class GameState():
                     elif move.start_col ==7:
                         self.current_castle_state.white_kingside = False
 
-        if piece_captured.name == "rook":
+        if piece_captured != ".." and piece_captured.name == "rook":
                 if piece_captured.color == "black":
                     if move.end_row == 0:
                         if move.end_col == 0:
@@ -494,7 +515,7 @@ class Move():
     file_to_col = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     col_to_file = {val: key for key, val in file_to_col.items()}
 
-    def __init__(self, start_sq, end_sq, board, is_enpassant = False):
+    def __init__(self, start_sq, end_sq, board, is_enpassant = False, is_castle = False):
         self.start_row = start_sq[0]
         self.start_col = start_sq[1]
         self.end_row = end_sq[0]
@@ -504,7 +525,7 @@ class Move():
         self.id = self.start_row*1000 + self.start_col*100 + self.end_row*10 + self.end_col
         self.is_enpassant = is_enpassant
         self.is_pawn_promo = self.is_pawn_promo()
-        self.is_castle = False
+        self.is_castle = is_castle
 
     
     def __eq__(self, other):
@@ -528,17 +549,62 @@ class Move():
         elif self.piece_moved.name == "pawn" and self.piece_moved.color == "black" and self.end_row == 7:
             self.is_pawn_promo = True
 
-
+'''
+Returns an array of all the possible castle moves that a king can make
+'''
 def get_castle_moves(self, king):
-    
+    row = king.row
+    col = king.col
+    castle_moves = []
+    in_check, pins, checks = self.check_for_pins_and_checks()
 
+    if in_check:
+        return
+    if self.white_to_move and self.current_castle_state.white_kingside or \
+        not self.white_to_move and self.current_castle_state.black_kingside:
+        self.get_kingside_moves(row, col, moves, king)
+    
+    if self.white_to_move and self.current_castle_state.white_queenside or \
+        not self.white_to_move and self.current_castle_state.black_queenside:
+        self.get_queenside_moves(row, col, moves, king)
+
+    return castle_moves
+
+'''
+Recursively generates the castle move for a particular direction
+'''
+def get_kingside_moves(self, row, col, move, king):
+    if self.board[row][col+1] == ".." and self.board[row][col+2] == "..":
+        one_right = Move((row, col), (row, col+1), self.board)
+        two_right = Move((row, col+1), (row, col+2), self.board)
+        if not (is_attacked(one_right) and is_attacked(two_right)):
+            return Move((row, col), (row, col+2), self.board, is_castle = True)
+    return 
+
+def is_attacked(self, move):
+    self.make_move(move)
+    in_check, pins, checks = self.check_for_pins_and_checks()
+    self.undo_move()
+    if not in_check:
+        return True
+    return False
+    
+def get_queenside_moves(self, row, col, move, king):
+    if self.board[row][col-1] == ".." and self.board[row][col-2] == ".." \
+        and self.board[row][col-3] == "..":
+        one_left = Move((row, col), (row, col-1), self.board)
+        two_left = Move((row, col-1), (row, col-2), self.board)
+        if not(is_attacked(one_left) and is_attacked(two_left)):
+            return Move((row, col), (row, col-2), self.board)
+    return 
+    
 
 
 class Memory(): #TODO: Change the name to represent enpassant
     def __init__(self):
         self.enpassant_sq = () # co-ordinates of a square where an en passant move is possible
 
-class CastlingRights()
+class CastlingRights():
     def __init__(self, wks, wqs, bks, bqs):
         self.white_kingside = wks # stores the castling rights for each side of the king
         self.white_queenside = wqs
