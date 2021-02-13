@@ -128,7 +128,6 @@ def main():
                 elif len(player_clicks) == 0 and ((not state.white_to_move and state.board[row][col].color == "white") or \
                     (state.white_to_move and state.board[row][col].color == "black")):
                     invalid_sq = (row, col)
-                    print("invalid")
                     pass
                 else:
                     invalid_sq = ()
@@ -136,6 +135,7 @@ def main():
                     player_clicks.append(selected_square)
                     if player_clicks != [] and state.board[player_clicks[0][0]][player_clicks[0][1]] != "..":
                         piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                        print(piece_selected)
                         list_of_moves = state.get_valid_moves(piece_selected)
                         if len(list_of_moves) == 0:
                             invalid_sq = (player_clicks[0][0], player_clicks[0][1])
