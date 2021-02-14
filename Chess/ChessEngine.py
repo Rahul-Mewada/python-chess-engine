@@ -127,7 +127,7 @@ class GameState():
     '''
     Takes a move as a param and executes it. Will not work for castling, en passant, or pawn promotion
     '''
-    def make_move(self, move):
+    def make_move(self, move, is_test=False):
         piece_moved = self.board[move.start_row][move.start_col]
         if piece_moved == "..":
             print("something is wrong")
@@ -142,8 +142,14 @@ class GameState():
         self.board[move.end_row][move.end_col] = piece_moved
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
-        self.white_to_move = not self.white_to_move
-        self.is_first_move = False
+
+        if not is_test:
+            self.white_to_move = not self.white_to_move
+            self.is_first_move = False
+        else:
+            print((move.start_row, move.start_col))
+            print((move.end_row, move.end_col))
+            print("test move made")
 
         if move.is_pawn_promo:
             # add a queen in it's place
@@ -200,7 +206,6 @@ class GameState():
                 self.board[move.end_row][move.end_col+1] = rook
                 rook.row = move.end_row
                 rook.col = move.end_col+1
-        print(str(self.do_coords_match()))
         self.update_castle_rights(move)
         self.castling_log.append(CastlingRights(
                                                 self.current_castle_state.white_kingside,
@@ -213,7 +218,7 @@ class GameState():
     '''
     Reverses the last action and adds the reveresed moved to the redo move stack
     '''
-    def undo_move(self):
+    def undo_move(self, is_test = False):
         if len(self.move_log) >= 1:
             undo = self.move_log.pop()
             piece_moved = undo.piece_moved
@@ -233,8 +238,11 @@ class GameState():
 
             if len(self.move_log) == 0:
                 self.is_first_move = True
-            self.white_to_move = not self.white_to_move
-            self.redo_move_log.append(undo)
+            if not is_test:
+                self.white_to_move = not self.white_to_move
+                self.redo_move_log.append(undo)
+            else:
+                print("test move undone")
 
             if undo.is_pawn_promo:
                 replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color)
@@ -388,6 +396,10 @@ class GameState():
             for check in checks:
                 self.board[start_row][start_col].check_direction = check[1]
 
+        print()
+        print("in_check: " + str(in_check))
+        print("is whites turn to move?: " + str(self.white_to_move))
+        print()
         return in_check, pins, checks
 
     def direction_search(self, row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction):
@@ -407,7 +419,7 @@ class GameState():
                 (pot_piece.name == "bishop" and (direction == "up-right" or direction == "up-left" or direction == "down-right" or direction == "down-left")) or \
                     pot_piece.name == "queen" or (pot_piece.name == "king" and count <=1):
                 if possible_pinned == []:
-                    is_check = True
+                    in_check = True
                     pieces_that_check.append((pot_piece, direction))
                 else:
                     for element in possible_pinned:
@@ -419,7 +431,7 @@ class GameState():
             if (count <=1 and pot_piece.name == "pawn" and pot_piece.color == "black" and (direction == "up-right" or direction == "up-left")) or \
                 (count <= 1 and pot_piece.name == "pawn" and pot_piece.color == "white" and (direction == "down-right" or direction == "down-left")): # if the piece is a pawn
                 if possible_pinned == []:
-                    is_check = True
+                    in_check = True
                     pieces_that_check.append((pot_piece, direction))
                 else:
                     for piece in possible_pinned:
@@ -454,15 +466,18 @@ class GameState():
         if piece.name == "king": # filters moves that would lead to a king into a check
             possible_moves = piece.possible_moves()
             for move in possible_moves: # for every possible move, make it and check if it results in a check or not
-                self.make_move(move)
+                self.make_move(move, is_test = True)
                 future_in_check, future_pins, future_checks = self.check_for_pins_and_checks()
-                self.undo_move()
-                if not future_in_check:    
+                self.undo_move(is_test = True)
+                if not future_in_check:
                     moves.append(move)
-            castle_moves = self.get_castle_moves(piece)
-            if castle_moves != []:
-                for move in castle_moves:
-                    moves.append(move)
+            if not in_check:
+                castle_moves = self.get_castle_moves(piece)
+                print("castle moves: " + str(castle_moves))
+                if castle_moves != None:
+                    for move in castle_moves:
+                        if move != None:
+                            moves.append(move)
         else: # if not a king then add all possible moves it can make
             moves = piece.possible_moves()
 
@@ -523,10 +538,7 @@ class GameState():
         row = king.row
         col = king.col
         castle_moves = []
-        in_check, pins, checks = self.check_for_pins_and_checks()
 
-        if in_check:
-            return
         if self.white_to_move and self.current_castle_state.white_kingside or \
             not self.white_to_move and self.current_castle_state.black_kingside:
             right_move = self.get_kingside_moves(row, col, king)
@@ -538,6 +550,7 @@ class GameState():
             left_move = self.get_queenside_moves(row, col, king)
             if left_move:
                 castle_moves.append(left_move)
+    
         return castle_moves
 
     '''
@@ -547,16 +560,19 @@ class GameState():
         if self.board[row][col+1] == ".." and self.board[row][col+2] == "..":
             one_right = Move((row, col), (row, col+1), self.board)
             two_right = Move((row, col), (row, col+2), self.board)
-            if not (self.is_attacked(one_right) and self.is_attacked(two_right)):
+            if not (self.is_attacked(one_right) or self.is_attacked(two_right)):
                 return Move((row, col), (row, col+2), self.board, is_castle = True)
         return 
 
     def is_attacked(self, move):
-        self.make_move(move)
+        self.make_move(move, is_test = True)
         in_check, pins, checks = self.check_for_pins_and_checks()
-        self.undo_move()
+        self.undo_move(is_test = True)
+        print("check for attack here: " + str((move.end_row, move.end_col)))
         if not in_check:
+            print("not being attacked here: " + str((move.end_row, move.end_col)))
             return False
+        print("is under attack here" + str((move.end_row, move.end_col)))
         return True
         
     def get_queenside_moves(self, row, col, king):
@@ -564,7 +580,7 @@ class GameState():
             and self.board[row][col-3] == "..":
             one_left = Move((row, col), (row, col-1), self.board)
             two_left = Move((row, col), (row, col-2), self.board)
-            if not(self.is_attacked(one_left) and self.is_attacked(two_left)):
+            if not(self.is_attacked(one_left) or self.is_attacked(two_left)):
                 return Move((row, col), (row, col-2), self.board, is_castle = True)
         return 
 
@@ -580,8 +596,6 @@ class Move():
         self.end_row = end_sq[0]
         self.end_col = end_sq[1]
         self.piece_moved = board[self.start_row][self.start_col]
-        print("piece moved: " + str(self.piece_moved))
-        print("pos: " + str((self.start_row, self.start_col)))
         self.piece_captured = board[self.end_row][self.end_col]
         self.id = self.start_row*1000 + self.start_col*100 + self.end_row*10 + self.end_col
         self.is_enpassant = is_enpassant
