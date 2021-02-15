@@ -63,6 +63,8 @@ class GameState():
         }
         self.current_castle_state = CastlingRights(True, True, True, True)
         self.castling_log = [CastlingRights(True, True, True, True)]
+        self.checkmate = False
+        self.stalemate = False
  # def direction_search(self, row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction):
     '''
     Converts a board of strings into a board of Pieces and populates the white and black piece arrays
@@ -206,6 +208,7 @@ class GameState():
                 self.board[move.end_row][move.end_col+1] = rook
                 rook.row = move.end_row
                 rook.col = move.end_col+1
+
         self.update_castle_rights(move)
         self.castling_log.append(CastlingRights(
                                                 self.current_castle_state.white_kingside,
@@ -263,16 +266,43 @@ class GameState():
                 self.board[undo.start_row][undo.end_col] = undo.piece_captured
                 self.change_cords(piece_captured, undo.start_row, undo.end_col, False)
             
-            # if undo.is_castle:
-            #     if undo.end_col - undo.start_col == 2: #kingside castle
-            #         rook = self.board[undo.end_row][undo.]
+            if undo.is_castle:
+                if undo.end_col - undo.start_col == 2: #kingside castle
+                    old_rook = self.board[undo.end_row][undo.end_col - 1]
+                    new_rook = p.Rook(undo.start_row, undo.end_col+1, self.board, piece_moved.color)
 
-            # undo castle log
+                    self.change_cords(old_rook, 8, 8, True) # removes the old rook from the pieces array and changes it's coords
+                    if old_rook.color == "black":
+                        temp = self.pop_piece(old_rook, self.black_playable_pieces)
+                        self.black_playable_pieces.append(new_rook)
+                    else:
+                        temp = self.pop_piece(old_rook, self.white_playable_pieces)
+                        self.black_playable_pieces.append(new_rook)
+                    
+                    self.board[undo.end_row][undo.end_col-1] = ".."
+                    self.board[undo.end_row][undo.end_col+1] = new_rook
+                elif undo.start_col - undo.end_col == 2:
+                    old_rook = self.board[undo.end_row][undo.end_col+1]
+                    new_rook = self.board[undo.end_row][undo.end_col-2]
+                    self.change_cords(old_rook, 8, 8, True)
+                    if old_rook.color == "black":
+                        temp = self.pop_piece(old_rook, self.black_playable_pieces)
+                        self.black_playable_pieces.append(new_rook)
+                    else:
+                        temp = self.pop_piece(old_rook, self.white_playable_pieces)
+                        self.white_playable_pieces.append(new_rook)
+                    self.board[undo.end_row][undo.end_col+1] = ".."
+                    self.board[undo.end_row][undo.end_col-2] = new_rook
+
+            #undo castle log
+
             self.castling_log.pop()
             self.current_castle_state.white_kingside = self.castling_log[-1].white_kingside
             self.current_castle_state.white_queenside = self.castling_log[-1].white_queenside
             self.current_castle_state.black_kingside = self.castling_log[-1].black_kingside
             self.current_castle_state.black_queenside = self.castling_log[-1].black_queenside
+            self.checkmate = False
+            self.stalemate = False
 
     def update_castle_rights(self, move):
         piece_moved = move.piece_moved
@@ -445,7 +475,7 @@ class GameState():
         return self.direc_dict[direction](row, col, count, color, pinned_pieces, possible_pinned, pieces_that_check, in_check, direction)
             
                 
-    def get_valid_moves(self, piece):
+    def get_valid_moves(self):
         moves = []
         in_check, pins, checks = self.check_for_pins_and_checks()
         dir_to_tuple = {
@@ -463,23 +493,7 @@ class GameState():
         else:
             king_row, king_col = self.find_king_pos("black")
 
-        if piece.name == "king": # filters moves that would lead to a king into a check
-            possible_moves = piece.possible_moves()
-            for move in possible_moves: # for every possible move, make it and check if it results in a check or not
-                self.make_move(move, is_test = True)
-                future_in_check, future_pins, future_checks = self.check_for_pins_and_checks()
-                self.undo_move(is_test = True)
-                if not future_in_check:
-                    moves.append(move)
-            if not in_check:
-                castle_moves = self.get_castle_moves(piece)
-                print("castle moves: " + str(castle_moves))
-                if castle_moves != None:
-                    for move in castle_moves:
-                        if move != None:
-                            moves.append(move)
-        else: # if not a king then add all possible moves it can make
-            moves = piece.possible_moves()
+        moves = self.get_possible_moves()
 
         if in_check:
             if len(checks) == 1: # only 1 check, block check or move king
@@ -504,31 +518,60 @@ class GameState():
                         if not (moves[i].end_row, moves[i].end_col) in valid_squares:
                             moves.remove(moves[i])
                 if len(moves) == 0:
-                    pass #checkmate
+                    self.checkmate = True
             else: # if there are 1+ checks only return moves if the piece selected is a king
                 if piece.name == "king":
                     if len(moves) == 0:
-                        pass #checkmate
+                        self.checkmate = True
                     return moves
                 else:
                     return []
         elif len(moves) == 0:
-            pass
-            # stalemate
+            self.stalemate = True
         return moves
 
-    def create_pawn_promo_move(self, start_sq, end_sq, board):
-        pass
 
 
     def get_possible_moves(self):
         moves = []
         if self.white_to_moves:
             for piece in self.white_playable_pieces:
-                moves.append(piece.valid_moves)
+                if piece.name == "king":
+                    king_moves = self.get_king_moves(piece)
+                    moves.append(self.get_king_moves(piece)) if king_moves != []
+                else:
+                    moves.append(piece.valid_moves)
         else:
             for piece in self.black_playable_pieces:
-                moves.append(piece.valid_moves)
+                if piece.name == "king":
+                    king_moves = self.get_king_moves(piece)
+                    moves.append(self.get_king_moves(piece)) if king_moves != []
+                else:
+                    moves.append(piece.valid_moves)
+
+        return moves
+
+    '''
+    Returns all the possible moves that a king can make
+    '''
+    def get_king_moves(king):
+        moves = []
+        if king.name == "king": # filters moves that would lead to a king into a check
+            possible_moves = king.possible_moves()
+            for move in possible_moves: # for every possible move, make it and check if it results in a check or not
+                self.make_move(move, is_test = True)
+                future_in_check, future_pins, future_checks = self.check_for_pins_and_checks()
+                self.undo_move(is_test = True)
+                if not future_in_check:
+                    moves.append(move)
+            if not in_check:
+                castle_moves = self.get_castle_moves(piece)
+                if castle_moves != None:
+                    for move in castle_moves:
+                        if move != None:
+                            moves.append(move)
+        else:
+            print("NOT A KING")
         return moves
 
     '''
