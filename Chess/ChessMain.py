@@ -67,7 +67,9 @@ def highlight_squares(screen, state, valid_moves, selected_square, invalid_sq):
             # highlight moves from that square
             s.fill(p.Color('yellow'))
             for move in valid_moves:
-                screen.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
+                if move.start_row == row and move.start_col == col:
+                    screen.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
+    print(invalid_sq)
 
     if invalid_sq != ():
         row, col = invalid_sq
@@ -98,11 +100,12 @@ def main():
     selected_square = () # no square selected, keep track of the last click of theuser (tuple: (row, col))
     player_clicks = []   # keep track of the player clicks (two tuples: [(row, col) -> (row, col)])
     list_of_moves = []
+    piece_moves = []
     state.white_to_move = True
     invalid_sq = ()
     while running: 
         for e in p.event.get():
-            
+            invalid_sq = ()
             if e.type == p.QUIT:
                 running = False
             # mouse handler
@@ -130,15 +133,20 @@ def main():
                     invalid_sq = (row, col)
                     pass
                 else:
-                    invalid_sq = ()
                     selected_square = (row, col)
                     player_clicks.append(selected_square)
                     if player_clicks != [] and state.board[player_clicks[0][0]][player_clicks[0][1]] != "..":
                         piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
-                        print(piece_selected)
-                        list_of_moves = state.get_valid_moves(piece_selected)
-                        if len(list_of_moves) == 0:
+                        list_of_moves = state.get_valid_moves()
+                        piece_moves = []
+                        for move in list_of_moves:
+                            if move.start_row == piece_selected.row and move.start_col == piece_selected.col:
+                                piece_moves.append(move)
+
+                        if len(piece_moves) == 0:
                             invalid_sq = (player_clicks[0][0], player_clicks[0][1])
+                            selected_sqaure = ()
+                            player_clicks = []
 
                     if len(player_clicks) == 2:
                         if player_clicks[0] == player_clicks[1]:
@@ -147,13 +155,14 @@ def main():
                             move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
                             #piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
                             #list_of_moves = piece_selected.possible_moves()
-                            for element in list_of_moves:
+                            for element in piece_moves:
                                 if move == element:
                                     state.make_move(element)
                                     break
                         selected_square = ()
                         player_clicks = []
-
+                        invalid_sq = ()
+            
 
             #ket handler
             elif e.type == p.KEYDOWN:
@@ -165,7 +174,7 @@ def main():
         
         #draw_game_state(screen, state)
         draw_board(screen)               # draw squares on the board
-        highlight_squares(screen, state, list_of_moves, selected_square, invalid_sq)
+        highlight_squares(screen, state, piece_moves, selected_square, invalid_sq)
         draw_pieces(screen, state.board)
         
         clock.tick(MAX_FPS)
