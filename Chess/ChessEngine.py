@@ -443,7 +443,7 @@ class GameState():
                         piece = element[0]
                         piece.is_pinned = True
                         piece.pin_direction = direction
-                    pinned_pieces.append(possible_pinned)
+                    pinned_pieces += possible_pinned
                 return in_check, pinned_pieces, pieces_that_check
             if (count <=1 and pot_piece.name == "pawn" and pot_piece.color == "black" and (direction == "up-right" or direction == "up-left")) or \
                 (count <= 1 and pot_piece.name == "pawn" and pot_piece.color == "white" and (direction == "down-right" or direction == "down-left")): # if the piece is a pawn
@@ -451,10 +451,11 @@ class GameState():
                     in_check = True
                     pieces_that_check.append((pot_piece, direction))
                 else:
-                    for piece in possible_pinned:
+                    for element in possible_pinned:
+                        piece = element[0]
                         piece.is_pinned = True
                         piece.pin_direction = direction
-                    pinned_pieces.append(possible_pinned)
+                    pinned_pieces += possible_pinned
                 return in_check, pinned_pieces, pieces_that_check
             else:  # if there are no enemy pieces or if the enemy pieces are not in a position to check or pin
                 return in_check, pinned_pieces, pieces_that_check
@@ -477,12 +478,37 @@ class GameState():
             "down-right": (1, 1),
             "down-left": (1, -1)
         }
+        for pin in pins:
+            pin_piece = pin[0]
+            pin_direction = pin[1]
+            if self.white_to_move:
+                for piece in self.white_playable_piece:
+                    if piece.id == pin_piece.id:
+                        piece.is_pinned = True
+                        piece.pin_direction = pin_direction
+            else:
+                for piece in self.black_playable_pieces:
+                    if piece.id == pin_piece.id:
+                        piece.is_pinned = True
+                        piece.pin_direciton = pin_direction
+
+    
         if self.white_to_move:
             king_row, king_col = self.find_king_pos("white")
+            for piece in self.white_playable_pieces:
+                if piece.name == "king":
+                    moves += self.get_king_moves(piece)
+                else:
+                    moves += piece.possible_moves()
         else:
             king_row, king_col = self.find_king_pos("black")
+            for piece in self.black_playable_pieces:
+                if piece.name == "king":
+                    moves += self.get_king_moves(piece)
+                else:
+                    moves += piece.possible_moves()
 
-        moves = self.get_possible_moves()
+        #moves = self.get_possible_moves()
 
         if in_check:
             if len(checks) == 1: # only 1 check, block check or move king
@@ -527,27 +553,22 @@ class GameState():
     '''
     def get_possible_moves(self):
         moves = []
+        in_check, pins, checks = self.check_for_pins_and_checks()
+
         if self.white_to_move:
-            for piece in self.white_playable_pieces:
+            for piece in self.white_playable_pieces: 
                 if piece.name == "king":
                     king_moves = self.get_king_moves(piece)
-                    if king_moves != []:
-                        for move in king_moves:
-                            moves.append(move)
+                    moves += king_moves
                 else:
-                    for move in piece.possible_moves():
-                        moves.append(move)
+                    moves += piece.possible_moves()
         else:
             for piece in self.black_playable_pieces:
                 if piece.name == "king":
                     king_moves = self.get_king_moves(piece)
-                    if king_moves != []:
-                        for move in king_moves:
-                            moves.append(move)
+                    moves += king_moves
                 else:
-                    for move in piece.possible_moves():
-                        moves.append(move)
-
+                    moves += piece.possible_moves()
         return moves
 
     '''
@@ -573,6 +594,7 @@ class GameState():
         else:
             print("NOT A KING")
 
+        in_check, pins, checks = self.check_for_pins_and_checks()
         return moves
 
     '''

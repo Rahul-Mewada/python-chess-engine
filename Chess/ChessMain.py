@@ -69,7 +69,7 @@ def highlight_squares(screen, state, valid_moves, selected_square, invalid_sq):
             for move in valid_moves:
                 if move.start_row == row and move.start_col == col:
                     screen.blit(s, (move.end_col * SQ_SIZE, move.end_row * SQ_SIZE))
-    print(invalid_sq)
+
 
     if invalid_sq != ():
         row, col = invalid_sq
@@ -142,7 +142,6 @@ def main():
                         for move in list_of_moves:
                             if move.start_row == piece_selected.row and move.start_col == piece_selected.col:
                                 piece_moves.append(move)
-
                         if len(piece_moves) == 0:
                             invalid_sq = (player_clicks[0][0], player_clicks[0][1])
                             selected_sqaure = ()

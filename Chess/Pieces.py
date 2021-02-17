@@ -92,8 +92,9 @@ class Pawn(Piece):
 
     def is_valid_square(self, square):
         row, col = square
-        if self.board[row][col] == "..":
-            return self.in_bounds(square)
+        if self.in_bounds(square):
+            if self.board[row][col] == "..":
+                return self.in_bounds(square)
         return False
  
     '''
