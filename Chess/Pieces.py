@@ -107,7 +107,8 @@ class Pawn(Piece):
             two_forward = (self.row + 2, self.col)
             diag_right = (self.row + 1, self.col + 1)
             diag_left = (self.row + 1, self.col -1)
-
+            current_sq = (self.row, self.col)
+            
             # foreward moves
             if self.is_valid_square(one_forward):
                 if not self.is_pinned or self.pin_direction == "down":
@@ -177,6 +178,11 @@ class Knight(Piece):
             (self.row-2, self.col+1), (self.row-2, self.col-1), (self.row-1,self.col+2), (self.row-1, self.col-2)
             ]
         current_sq = (self.row, self.col)
+        if not self.in_bounds(current_sq):
+            print("****************RED FLAG****************")
+            print(self.name + " " + self.color)
+            print(current_sq)
+
         valid_moves = []
         for move in list_possible_moves:
             if self.is_valid_square(move) and not self.is_pinned:
@@ -199,6 +205,11 @@ class Bishop(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
+        if not self.in_bounds(current_sq):
+            print("****************RED FLAG****************")
+            print(self.name + " " + self.color)
+            print(current_sq)
+
         possible_directions = ["up-right", "up-left", "down-right", "down-left"]
         
         for direction in possible_directions:
@@ -218,6 +229,10 @@ class Rook(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
+        if not self.in_bounds(current_sq):
+            print("****************RED FLAG****************")
+            print(self.name + " " + self.color)
+            print(current_sq)
         possible_directions = ["up", "down", "right", "left"]
         
         for direction in possible_directions:
@@ -236,6 +251,10 @@ class Queen(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
+        if not self.in_bounds(current_sq):
+            print("****************RED FLAG****************")
+            print(self.name + " " + self.color)
+            print(current_sq)
         possible_directions = ["up", "down", "right", "left", "up-right", "up-left", "down-right", "down-left"]
         
         for direction in possible_directions:
@@ -254,6 +273,10 @@ class King(Piece):
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
+        if not self.in_bounds(current_sq):
+            print("****************RED FLAG****************")
+            print(self.name + " " + self.color)
+            print(current_sq)
         possible_directions = [
             (self.row+1,self.col), (self.row+1, self.col+1), (self.row+1, self.col-1),
             (self.row-1, self.col), (self.row-1, self.col+1), (self.row-1, self.col-1),

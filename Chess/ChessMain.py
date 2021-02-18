@@ -4,7 +4,7 @@ Main driver file, responsible for handling user input and
 """
 import pygame as p
 import ChessEngine
-
+import ChessBot as bot
 p.init()                # initializing pygame
 WIDTH = HEIGHT = 400
 DIMENSION = 8           # dimension of the board is 8 x 8
@@ -103,79 +103,99 @@ def main():
     piece_moves = []
     state.white_to_move = True
     invalid_sq = ()
+    player_one = True # if a human is playing white this will be true. If an AI is playing then this is false
+    player_two = False # same as the above but for black
+    game_over = False
+    move_made = False
+    list_of_moves = state.get_valid_moves()
     while running: 
+
+        is_human_turn = (state.white_to_move and player_one) or (not state.white_to_move and player_two)
         for e in p.event.get():
             invalid_sq = ()
             if e.type == p.QUIT:
                 running = False
+
             # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
+                if not game_over and is_human_turn:
+                    white_pinned = 0
+                    black_pinned = 0
+                    for piece in state.white_playable_pieces:
+                        if piece.is_pinned:
+                            white_pinned += 1
+                    for piece in state.black_playable_pieces:
+                        if piece.is_pinned:
+                            black_pinned +=1 
+                    
+                    in_check, pins, checks = state.check_for_pins_and_checks()
 
-                white_pinned = 0
-                black_pinned = 0
-                for piece in state.white_playable_pieces:
-                    if piece.is_pinned:
-                        white_pinned += 1
-                for piece in state.black_playable_pieces:
-                    if piece.is_pinned:
-                        black_pinned +=1 
-                
-                in_check, pins, checks = state.check_for_pins_and_checks()
+                    location = p.mouse.get_pos() # (x,y) location of mouse
+                    col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
+                    row =  location[1]//SQ_SIZE
+                    if state.board[row][col] == ".." and len(player_clicks) == 0: # user selected an empty square first
+                        pass
+                    elif len(player_clicks) == 0 and ((not state.white_to_move and state.board[row][col].color == "white") or \
+                        (state.white_to_move and state.board[row][col].color == "black")):
+                        invalid_sq = (row, col)
+                        pass
+                    else:
+                        selected_square = (row, col)
+                        player_clicks.append(selected_square)
+                        if player_clicks != [] and state.board[player_clicks[0][0]][player_clicks[0][1]] != "..":
+                            piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                            # LIST OF MOVES HERE
+                            piece_moves = []
+                            for move in list_of_moves:
+                                if move.start_row == piece_selected.row and move.start_col == piece_selected.col:
+                                    piece_moves.append(move)
+                            if len(piece_moves) == 0:
+                                invalid_sq = (player_clicks[0][0], player_clicks[0][1])
+                                selected_sqaure = ()
+                                player_clicks = []
 
-                
-                location = p.mouse.get_pos() # (x,y) location of mouse
-                col = location[0]//SQ_SIZE   # double / ensures that row and col are ints
-                row =  location[1]//SQ_SIZE
-                if state.board[row][col] == ".." and len(player_clicks) == 0: # user selected an empty square first
-                    pass
-                elif len(player_clicks) == 0 and ((not state.white_to_move and state.board[row][col].color == "white") or \
-                    (state.white_to_move and state.board[row][col].color == "black")):
-                    invalid_sq = (row, col)
-                    pass
-                else:
-                    selected_square = (row, col)
-                    player_clicks.append(selected_square)
-                    if player_clicks != [] and state.board[player_clicks[0][0]][player_clicks[0][1]] != "..":
-                        piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
-                        list_of_moves = state.get_valid_moves()
-                        piece_moves = []
-                        for move in list_of_moves:
-                            if move.start_row == piece_selected.row and move.start_col == piece_selected.col:
-                                piece_moves.append(move)
-                        if len(piece_moves) == 0:
-                            invalid_sq = (player_clicks[0][0], player_clicks[0][1])
-                            selected_sqaure = ()
+                        if len(player_clicks) == 2:
+                            if player_clicks[0] == player_clicks[1]:
+                                pass
+                            else:
+                                move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
+                                #piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
+                                #list_of_moves = piece_selected.possible_moves()
+                                for element in piece_moves:
+                                    if move == element:
+                                        state.make_move(element)
+                                        move_made = True
+                                        break
+                            selected_square = ()
                             player_clicks = []
-
-                    if len(player_clicks) == 2:
-                        if player_clicks[0] == player_clicks[1]:
-                            pass
-                        else:
-                            move = ChessEngine.Move(player_clicks[0], player_clicks[1], state.board)
-                            #piece_selected = state.board[player_clicks[0][0]][player_clicks[0][1]]
-                            #list_of_moves = piece_selected.possible_moves()
-                            for element in piece_moves:
-                                if move == element:
-                                    state.make_move(element)
-                                    break
-                        selected_square = ()
-                        player_clicks = []
-                        invalid_sq = ()
-            
-
-            #ket handler
+                            invalid_sq = ()
+            #key handler
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: # undo when key 'z' is pressed
                     state.undo_move()
                 if e.key == p.K_x: # redo when key 'x' is pressed
                     state.redo_move()
-                    
-        
+
+        # AI Move finder logic
+        if not game_over and not is_human_turn:
+            ai_move = bot.find_random_move(list_of_moves)
+            state.make_move(ai_move)
+            move_made = True
+
+        if move_made:
+            list_of_moves = state.get_valid_moves()
+            move_made = False
+
         #draw_game_state(screen, state)
         draw_board(screen)               # draw squares on the board
         highlight_squares(screen, state, piece_moves, selected_square, invalid_sq)
         draw_pieces(screen, state.board)
         
+        if state.checkmate:
+            game_over = True
+        elif state.stalemate:
+            game_over = True
+
         clock.tick(MAX_FPS)
         p.display.flip()
 

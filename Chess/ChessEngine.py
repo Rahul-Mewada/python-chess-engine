@@ -38,7 +38,7 @@ class GameState():
         self.is_first_move = True
         self.white_playable_pieces = []
         self.black_playable_pieces = []
-        self.captured_pieces = []
+        #self.captured_pieces = []
         self.white_king_sq = self.find_king_pos("white")
         self.black_king_sq = self.find_king_pos("black")
         self.special_move_mem = Memory()
@@ -140,9 +140,9 @@ class GameState():
         if piece_captured != "..":                                  # if the square where the piece wants to go has another piece
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
             if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
-                self.captured_pieces.append(self.pop_piece(piece_captured, self.black_playable_pieces))
+                tmep = self.pop_piece(piece_captured, self.black_playable_pieces)
             else:
-                self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
+                temp = self.pop_piece(piece_captured, self.white_playable_pieces)
         self.board[move.end_row][move.end_col] = piece_moved
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
@@ -171,9 +171,9 @@ class GameState():
             piece_captured = self.board[move.start_row][move.end_col]
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
             if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
-                self.captured_pieces.append(self.pop_piece(piece_captured, self.black_playable_pieces))
+                temp = self.pop_piece(piece_captured, self.black_playable_pieces)
             else:
-                self.captured_pieces.append(self.pop_piece(piece_captured, self.white_playable_pieces))
+                temp = self.pop_piece(piece_captured, self.white_playable_pieces)
             self.board[move.start_row][move.end_col] = ".."
             move.piece_captured = piece_captured
 
@@ -240,9 +240,6 @@ class GameState():
             j += 1
             print(piece.name + " " + str(j) + " " + str((piece.row, piece.col)))
         print()
-        print("Captured Pieces")
-        for piece in self.captured_pieces:
-            print(piece.name + " " + piece.color)
         print("Do coords match? " + str(self.do_coords_match()))
         print()
         print()
@@ -264,12 +261,11 @@ class GameState():
 
             if piece_captured != "..":
                 self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
-            if len(self.captured_pieces) != 0:
-                piece_removed = piece_captured
-                if piece_removed.color == "black":
-                    self.black_playable_pieces.append(piece_removed)
+                if piece_captured.color == "black":
+                    self.black_playable_pieces.append(piece_captured)
                 else:
-                    self.white_playable_pieces.append(piece_removed)
+                    self.white_playable_pieces.append(piece_captured)
+            
 
             if len(self.move_log) == 0:
                 self.is_first_move = True
