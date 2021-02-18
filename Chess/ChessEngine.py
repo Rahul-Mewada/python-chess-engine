@@ -135,6 +135,7 @@ class GameState():
         if piece_moved == "..":
             print("something is wrong")
         piece_captured = self.board[move.end_row][move.end_col]
+        
         self.board[move.start_row][move.start_col] = ".." # adds an empty piece to the starting row and col of the move
         if piece_captured != "..":                                  # if the square where the piece wants to go has another piece
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
@@ -215,11 +216,44 @@ class GameState():
                                                 self.current_castle_state.black_queenside
                                                 )
                                 )
+        if not is_test:
+            self.debug_print(move)
+        else:
+            print("Test Move")
+
+    def debug_print(self, move):
+        piece_moved = move.piece_moved
+        piece_captured = move.piece_captured
+        print()
+        print()
+        print("Piece Moved: " + str(piece_moved) + str(piece_moved.color))
+        print("Piece Captured: " + str(piece_captured))
+        i = 0
+        j = 0
+        print("White Pieces")
+        for piece in self.white_playable_pieces:
+            i += 1
+            print(piece.name + " " + str(i) + " " + str((piece.row, piece.col)))
+        print()
+        print("Black Pieces")
+        for piece in self.black_playable_pieces:
+            j += 1
+            print(piece.name + " " + str(j) + " " + str((piece.row, piece.col)))
+        print()
+        print("Captured Pieces")
+        for piece in self.captured_pieces:
+            print(piece.name + " " + piece.color)
+        print("Do coords match? " + str(self.do_coords_match()))
+        print()
+        print()
 
     '''
     Reverses the last action and adds the reveresed moved to the redo move stack
     '''
     def undo_move(self, is_test = False):
+        if is_test:
+            print("Test Undo")
+
         if len(self.move_log) >= 1:
             undo = self.move_log.pop()
             piece_moved = undo.piece_moved
@@ -231,7 +265,7 @@ class GameState():
             if piece_captured != "..":
                 self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
             if len(self.captured_pieces) != 0:
-                piece_removed = self.captured_pieces.pop() 
+                piece_removed = piece_captured
                 if piece_removed.color == "black":
                     self.black_playable_pieces.append(piece_removed)
                 else:
@@ -243,7 +277,7 @@ class GameState():
                 self.white_to_move = not self.white_to_move
                 self.redo_move_log.append(undo)
 
-
+            # update pawn promotion move
             if undo.is_pawn_promo:
                 replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color)
                 self.board[undo.start_row][undo.start_col] = replacement_piece
@@ -258,11 +292,13 @@ class GameState():
                 temp_piece = piece_moved
                 self.change_cords(piece_moved, 8,8, True)
 
+            # update en_passnt move
             if undo.is_enpassant:
                 self.board[undo.end_row][undo.end_col] = ".."
                 self.board[undo.start_row][undo.end_col] = undo.piece_captured
                 self.change_cords(piece_captured, undo.start_row, undo.end_col, False)
             
+            # update castling move
             if undo.is_castle:
                 if undo.end_col - undo.start_col == 2: #kingside castle
                     old_rook = self.board[undo.end_row][undo.end_col - 1]
@@ -278,6 +314,7 @@ class GameState():
                     
                     self.board[undo.end_row][undo.end_col-1] = ".."
                     self.board[undo.end_row][undo.end_col+1] = new_rook
+
                 elif undo.start_col - undo.end_col == 2:
                     old_rook = self.board[undo.end_row][undo.end_col+1]
                     new_rook = self.board[undo.end_row][undo.end_col-2]
@@ -482,7 +519,7 @@ class GameState():
             pin_piece = pin[0]
             pin_direction = pin[1]
             if self.white_to_move:
-                for piece in self.white_playable_piece:
+                for piece in self.white_playable_pieces:
                     if piece.id == pin_piece.id:
                         piece.is_pinned = True
                         piece.pin_direction = pin_direction
