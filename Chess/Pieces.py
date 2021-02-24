@@ -1,5 +1,6 @@
 import ChessEngine as c
 import uuid
+from watchpoints import watch
 
 class Piece():
     def __init__(self, row, col, board):
@@ -225,7 +226,8 @@ class Rook(Piece):
         self.color = color
         self.is_empty = False
         self.name = "rook"
-    
+        watch(row)
+        
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)

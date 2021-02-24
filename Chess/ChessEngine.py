@@ -14,6 +14,7 @@ import numpy as np
 import uuid
 import Pieces as p
 
+
 class GameState():
     def __init__(self):
 
@@ -200,7 +201,7 @@ class GameState():
                 self.board[move.end_row][move.start_col+3] = ".." # assign the square on the board as empty
                 self.board[move.end_row][move.end_col-1] = new_rook # update the board with the new rook position
 
-            else:
+            else: # queenside castle move
                 rook = self.board[move.end_row][move.start_col-4]
                 color = rook.color
                 self.board[move.end_row][move.end_col-4] = ".."
