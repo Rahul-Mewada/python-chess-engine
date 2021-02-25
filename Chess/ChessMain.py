@@ -103,7 +103,7 @@ def main():
     piece_moves = []
     state.white_to_move = True
     invalid_sq = ()
-    player_one = True # if a human is playing white this will be true. If an AI is playing then this is false
+    player_one = False # if a human is playing white this will be true. If an AI is playing then this is false
     player_two = False # same as the above but for black
     game_over = False
     move_made = False
