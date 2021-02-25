@@ -152,7 +152,7 @@ class GameState():
             self.is_first_move = False
 
 
-        if move.is_pawn_promo:
+        if move.is_pawn_promotion:
             # add a queen in it's place
             replacement_piece = p.Queen(move.end_row, move.end_col, self.board, piece_moved.color)
             self.board[move.end_row][move.end_col] = replacement_piece
@@ -176,7 +176,7 @@ class GameState():
                 temp = self.pop_piece(piece_captured, self.white_playable_pieces)
             self.board[move.start_row][move.end_col] = ".."
             move.piece_captured = piece_captured
-                    
+
         # update the enpassant square if a pawn is moved
         if piece_moved.name == "pawn" and abs(move.start_row - move.end_row) == 2:
             self.special_move_mem.enpassant_sq = ((move.start_row + move.end_row)//2, move.end_col)
@@ -273,7 +273,7 @@ class GameState():
                 self.redo_move_log.append(undo)
 
             # update pawn promotion move
-            if undo.is_pawn_promo:
+            if undo.is_pawn_promotion:
                 replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color)
                 self.board[undo.start_row][undo.start_col] = replacement_piece
                 
@@ -704,7 +704,7 @@ class Move():
         self.piece_captured = board[self.end_row][self.end_col]
         self.id = self.start_row*1000 + self.start_col*100 + self.end_row*10 + self.end_col
         self.is_enpassant = is_enpassant
-        self.is_pawn_promo = self.is_pawn_promo()
+        self.is_pawn_promotion = self.is_pawn_promo()
         self.is_castle = is_castle
 
     
@@ -724,10 +724,13 @@ class Move():
     Returns true if a move is a pawn promotion
     '''    
     def is_pawn_promo(self):
+        is_promotion = False
         if self.piece_moved.name == "pawn" and self.piece_moved.color == "white" and self.end_row == 0:
-            self.is_pawn_promo = True
+            is_promotion = True
         elif self.piece_moved.name == "pawn" and self.piece_moved.color == "black" and self.end_row == 7:
-            self.is_pawn_promo = True
+            is_promotion = True
+        return is_promotion
+        
 
 
     

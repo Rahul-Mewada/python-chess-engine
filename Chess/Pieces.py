@@ -32,6 +32,7 @@ class Piece():
             "down-right": "up-left",
             "down-left": "up-right"
         }
+        self.id = uuid.uuid1()
 
     '''
     Function that returns an array containing all valid moves that a piece can take
@@ -80,13 +81,18 @@ class Piece():
             return True
         else:
             return False
+    
+    def __eq__(self, other):
+        if isinstance(other, Piece):
+            return self.id == other.id
+        return False
+
 
 
 
 class Pawn(Piece):
     def __init__(self, row, col, board, color, special_moves):
         super().__init__(row, col, board)
-        self.id = uuid.uuid1()
         self.color = color
         self.name = "pawn"
         self.special_moves = special_moves
@@ -166,7 +172,6 @@ class Pawn(Piece):
 class Knight(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
-        self.id = uuid.uuid1()
         self.color = color
         self.name = "knight"
 
@@ -196,7 +201,6 @@ class Knight(Piece):
 class Bishop(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
-        self.id = uuid.uuid1()
         self.color = color
         self.name = "bishop"
 
@@ -222,12 +226,11 @@ class Bishop(Piece):
 class Rook(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
-        self.id = uuid.uuid1()
         self.color = color
         self.is_empty = False
         self.name = "rook"
         watch(row)
-        
+
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
@@ -245,7 +248,6 @@ class Rook(Piece):
 class Queen(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
-        self.id = uuid.uuid1()
         self.color = color
         self.is_empty = False
         self.name = "queen"
@@ -267,7 +269,6 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, row, col, board, color):
         super().__init__(row, col, board)
-        self.id = uuid.uuid1()
         self.color = color
         self.is_empty = False
         self.name = "king"
