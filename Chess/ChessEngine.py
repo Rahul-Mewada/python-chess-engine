@@ -14,8 +14,6 @@ import numpy as np
 import uuid
 import Pieces as p
 
-# debug branch
-
 class GameState():
     def __init__(self):
 
@@ -178,8 +176,7 @@ class GameState():
                 temp = self.pop_piece(piece_captured, self.white_playable_pieces)
             self.board[move.start_row][move.end_col] = ".."
             move.piece_captured = piece_captured
-
-        
+                    
         # update the enpassant square if a pawn is moved
         if piece_moved.name == "pawn" and abs(move.start_row - move.end_row) == 2:
             self.special_move_mem.enpassant_sq = ((move.start_row + move.end_row)//2, move.end_col)
