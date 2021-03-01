@@ -709,6 +709,16 @@ class GameState():
             if not(self.is_attacked(one_left) or self.is_attacked(two_left)):
                 return Move((row, col), (row, col-2), self.board, is_castle = True)
         return 
+    
+    def evaluate(self):
+        tot_points = 0
+        if self.white_to_move:
+            for piece in self.white_playable_pieces:
+                tot_points += piece.value
+        else:
+            for piece in self.black_playable_pieces:
+                tot_points += piece.value
+        return tot_points
 
 class Move():
     rank_to_row = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}

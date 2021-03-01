@@ -33,6 +33,16 @@ class Piece():
             "down-left": "up-right"
         }
         self.id = uuid.uuid1()
+        self.piece_square_table = [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ]
 
     '''
     Function that returns an array containing all valid moves that a piece can take
@@ -87,7 +97,11 @@ class Piece():
             return self.id == other.id
         return False
 
-
+    '''
+    Returns the positional value of a piece using it's piece square table
+    '''
+    def pos_value(self):
+        return self.piece_square_table[self.row][self.col]
 
 
 class Pawn(Piece):
@@ -97,6 +111,24 @@ class Pawn(Piece):
         self.name = "pawn"
         self.special_moves = special_moves
         self.value = 1
+        self.piece_square_table = [
+            [0,  0,  0,  0,  0,  0,  0,  0],
+            [50, 50, 50, 50, 50, 50, 50, 50],
+            [10, 10, 20, 30, 30, 20, 10, 10],
+            [5,  5, 10, 25, 25, 10,  5,  5],
+            [0,  0,  0, 20, 20,  0,  0,  0],
+            [5, -5,-10,  0,  0,-10, -5,  5],
+            [5, 10, 10,-20,-20, 10, 10,  5],
+            [0,  0,  0,  0,  0,  0,  0,  0]
+        ]
+    '''
+    Returns the positional value of a piece using it's piece square table
+    '''
+    def pos_value(self):
+        if self.color == "white":
+            return self.piece_square_table[self.row][self.col]
+        else:
+            return self.piece_square_table[7 - self.row][self.col]
 
     def is_valid_square(self, square):
         row, col = square
@@ -176,6 +208,16 @@ class Knight(Piece):
         self.color = color
         self.name = "knight"
         self.value = 3
+        self.piece_square_table = [
+            [-50,-40,-30,-30,-30,-30,-40,-50],
+            [-40,-20,  0,  0,  0,  0,-20,-40],
+            [-30,  0, 10, 15, 15, 10,  0,-30],
+            [-30,  5, 15, 20, 20, 15,  5,-30],
+            [-30,  0, 15, 20, 20, 15,  0,-30],
+            [-30,  5, 10, 15, 15, 10,  5,-30],
+            [-40,-20,  0,  5,  5,  0,-20,-40],
+            [-50,-40,-30,-30,-30,-30,-40,-50]
+        ]
 
     '''
     Returns all possible moves that a knight can take. Not accounting for potential checks or checkmates.
@@ -206,6 +248,17 @@ class Bishop(Piece):
         self.color = color
         self.name = "bishop"
         self.value = 3
+        self.piece_square_table = [
+            [-20,-10,-10,-10,-10,-10,-10,-20],
+            [-10,  0,  0,  0,  0,  0,  0,-10],
+            [-10,  0,  5, 10, 10,  5,  0,-10],
+            [-10,  5,  5, 10, 10,  5,  5,-10],
+            [-10,  0, 10, 10, 10, 10,  0,-10],
+            [-10, 10, 10, 10, 10, 10, 10,-10],
+            [-10,  5,  0,  0,  0,  0,  5,-10],
+            [-20,-10,-10,-10,-10,-10,-10,-20]
+        ]
+
     '''
     Returns all possible moves that a bishop can take. Not accounting for potential checks or checkmates.
     '''
@@ -232,7 +285,16 @@ class Rook(Piece):
         self.is_empty = False
         self.name = "rook"
         self.value = 3
-        watch(row)
+        self.piece_square_table = [
+            [0,  0,  0,  0,  0,  0,  0,  0],
+            [5, 10, 10, 10, 10, 10, 10, 5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [0,  0,  0,  5,  5,  0,  0,  0]
+        ]
 
     def possible_moves(self):
         possible_moves = []
@@ -255,6 +317,16 @@ class Queen(Piece):
         self.is_empty = False
         self.name = "queen"
         self.value = 9
+        self.piece_square_table = [
+            [-20,-10,-10, -5, -5,-10,-10,-20],
+            [-10,  0,  0,  0,  0,  0,  0,-10],
+            [-10,  0,  5,  5,  5,  5,  0,-10],
+            [-5,  0,  5,  5,  5,  5,  0, -5],
+            [0,  0,  5,  5,  5,  5,  0, -5],
+            [-10,  5,  5,  5,  5,  5,  0,-10],
+            [-10,  0,  5,  0,  0,  0,  0,-10],
+            [-20,-10,-10, -5, -5,-10,-10,-20]
+        ]
     
     def possible_moves(self):
         possible_moves = []
@@ -276,7 +348,18 @@ class King(Piece):
         self.color = color
         self.is_empty = False
         self.name = "king"
-        
+        self.value = 9999
+        self.piece_square_table = [
+            [-30,-40,-40,-50,-50,-40,-40,-30],
+            [-30,-40,-40,-50,-50,-40,-40,-30],
+            [-30,-40,-40,-50,-50,-40,-40,-30],
+            [-30,-40,-40,-50,-50,-40,-40,-30],
+            [-20,-30,-30,-40,-40,-30,-30,-20],
+            [-10,-20,-20,-20,-20,-20,-20,-10],
+            [20, 20,  0,  0,  0,  0, 20, 20],
+            [20, 30, 10,  0,  0, 10, 30, 20]
+        ]
+
     def possible_moves(self):
         possible_moves = []
         current_sq = (self.row, self.col)
