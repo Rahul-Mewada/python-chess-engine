@@ -13,6 +13,7 @@ ex) bK represents a black(b) king(K)
 import numpy as np
 import uuid
 import Pieces as p
+import pdb
 
 class GameState():
     def __init__(self):
@@ -134,19 +135,25 @@ class GameState():
         piece_moved = self.board[move.start_row][move.start_col]
         if piece_moved == "..":
             print("something is wrong")
+            raise NameError("Piece moved is empty")
         piece_captured = self.board[move.end_row][move.end_col]
-        
         self.board[move.start_row][move.start_col] = ".." # adds an empty piece to the starting row and col of the move
         if piece_captured != "..":                                  # if the square where the piece wants to go has another piece
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
             if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
-                tmep = self.pop_piece(piece_captured, self.black_playable_pieces)
+                self.black_playable_pieces.remove(piece_captured)
             else:
-                temp = self.pop_piece(piece_captured, self.white_playable_pieces)
+                self.white_playable_pieces.remove(piece_captured)
         self.board[move.end_row][move.end_col] = piece_moved
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
-
+        print()
+        print("Move Log")
+        print("Piece Moved: " + str(piece_moved.color) + " " + str(piece_moved.name))
+        print("Piece Captured: " + str(piece_captured))
+        print("Moved from " + str((move.start_row, move.start_col)) + " to " + str((move.end_row, move.end_col)))
+        print("Is a test move? " + str(is_test))
+        print()
         if not is_test:
             self.white_to_move = not self.white_to_move
             self.is_first_move = False
@@ -157,23 +164,28 @@ class GameState():
             replacement_piece = p.Queen(move.end_row, move.end_col, self.board, piece_moved.color)
             self.board[move.end_row][move.end_col] = replacement_piece
 
-            # adding the replacement piece to the playable pieces array 
+            # adds the replacement piece to the playable pieces array and removes the replaced piece
             if replacement_piece.color == "white":
                 self.white_playable_pieces.append(replacement_piece)
+                self.white_playable_pieces.remove(piece_moved)
+                
             else:
                 self.black_playable_pieces.append(replacement_piece)
+                self.black_playable_pieces.remove(piece_moved)
 
-            # remove the pawn from the board
-            temp_piece = piece_moved
-            self.change_cords(temp_piece, 8, 8, True)
+            self.change_cords(piece_moved, 8, 8, True)
+
 
         if move.is_enpassant == True: 
             piece_captured = self.board[move.start_row][move.end_col]
+            if piece_captured == "..":
+                print("Piece captured in pawn promo is empty")
+
             self.change_cords(piece_captured, 8, 8, True)           # change the co-ordinates of the piece and mark it as being captured
             if piece_captured.color == "black":                     # appends the non-empty piece to the captured_pieces list
-                temp = self.pop_piece(piece_captured, self.black_playable_pieces)
+                self.black_playable_pieces.remove(piece_captured)
             else:
-                temp = self.pop_piece(piece_captured, self.white_playable_pieces)
+                self.white_playable_pieces.remove(piece_captured)
             self.board[move.start_row][move.end_col] = ".."
             move.piece_captured = piece_captured
 
@@ -187,25 +199,32 @@ class GameState():
             if move.end_col - move.start_col == 2: # kingside castle move
                 new_rook = p.Rook(move.end_row, move.end_col-1, self.board, piece_moved.color) # create a new rook piece
 
-                old_rook = self.board[move.end_row][move.start_col+3] # remove the old rook piece and reset it's coords
+                old_rook = self.board[move.start_row][move.start_col + 3] # remove the old rook piece and reset it's coords
                 if piece_moved.color == "black":
-                    temp = self.pop_piece(old_rook, self.black_playable_pieces)
+                    self.black_playable_pieces.remove(old_rook)
                     self.black_playable_pieces.append(new_rook)
                 else:
-                    temp = self.pop_piece(old_rook, self.white_playable_pieces)
+                    self.white_playable_pieces.remove(old_rook)
                     self.white_playable_pieces.append(new_rook)
                 self.change_cords(old_rook, 8, 8, True)
 
-                self.board[move.end_row][move.start_col+3] = ".." # assign the square on the board as empty
-                self.board[move.end_row][move.end_col-1] = new_rook # update the board with the new rook position
+                self.board[move.start_row][move.start_col+3] = ".." # assign the square on the board as empty
+                self.board[move.end_row][move.end_col-1] = new_rook # update the board with the new rook
 
             else: # queenside castle move
-                rook = self.board[move.end_row][move.start_col-4]
-                color = rook.color
-                self.board[move.end_row][move.end_col-4] = ".."
-                self.board[move.end_row][move.end_col+1] = rook
-                rook.row = move.end_row
-                rook.col = move.end_col+1
+                old_rook = self.board[move.end_row][move.start_col-4]
+                new_rook = p.Rook(move.start_row, move.end_col + 1, self.board, piece_moved.color)
+                if piece_moved.color == "black":
+                    self.black_playable_pieces.append(new_rook)
+                    self.black_playable_pieces.remove(old_rook)
+                else:
+                    self.white_playable_pieces.append(new_rook)
+                    self.white_playable_pieces.remove(old_rook)
+                self.change_cords(old_rook, 8, 8, True)
+
+                self.board[move.end_row][move.start_col-4] = ".." # assign the square on the board as empty
+                self.board[move.end_row][move.end_col+1] = new_rook # update the board with the new rook
+                
 
         self.update_castle_rights(move)
         self.castling_log.append(CastlingRights(
@@ -216,9 +235,8 @@ class GameState():
                                                 )
                                 )
         if not is_test:
-            self.debug_print(move)
-        else:
-            print("Test Move")
+            #self.debug_print(move)
+            pass
 
     def debug_print(self, move):
         piece_moved = move.piece_moved
@@ -247,8 +265,6 @@ class GameState():
     Reverses the last action and adds the reveresed moved to the redo move stack
     '''
     def undo_move(self, is_test = False):
-        if is_test:
-            print("Test Undo")
 
         if len(self.move_log) >= 1:
             undo = self.move_log.pop()
@@ -257,6 +273,14 @@ class GameState():
             self.board[undo.start_row][undo.start_col] = piece_moved
             self.change_cords(piece_moved, undo.start_row, undo.start_col, False)
             self.board[undo.end_row][undo.end_col] = piece_captured
+
+            print()
+            print("Undo Log")
+            print("Piece Moved: " + str(piece_moved.color) + " " + str(piece_moved.name))
+            print("Piece Captured: " + str(piece_captured))
+            print("Moved from " + str((undo.start_row, undo.start_col)) + " to " + str((undo.end_row, undo.end_col)))
+            print("Is a test move? " + str(is_test))
+            print()
 
             if piece_captured != "..":
                 self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
@@ -276,15 +300,14 @@ class GameState():
             if undo.is_pawn_promotion:
                 replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color)
                 self.board[undo.start_row][undo.start_col] = replacement_piece
-                
                 # adding the pawn to the pieces on the board
                 if replacement_piece.color == "white":
                     self.white_playable_pieces.append(replacement_piece)
+                    self.white_playable_pieces.remove(piece_moved)
                 else:
                     self.black_playable_pieces.append(replacement_piece)
-
+                    self.white_playable_pieces.remove(piece_moved)
                 # removing the queen from the board
-                temp_piece = piece_moved
                 self.change_cords(piece_moved, 8,8, True)
 
             # update en_passnt move
@@ -299,29 +322,31 @@ class GameState():
                     old_rook = self.board[undo.end_row][undo.end_col - 1]
                     new_rook = p.Rook(undo.start_row, undo.end_col+1, self.board, piece_moved.color)
 
-                    self.change_cords(old_rook, 8, 8, True) # removes the old rook from the pieces array and changes it's coords
                     if old_rook.color == "black":
-                        temp = self.pop_piece(old_rook, self.black_playable_pieces)
+                        self.black_playable_pieces.remove(old_rook)
                         self.black_playable_pieces.append(new_rook)
                     else:
-                        temp = self.pop_piece(old_rook, self.white_playable_pieces)
-                        self.black_playable_pieces.append(new_rook)
+                        self.white_playable_pieces.remove(old_rook)
+                        self.white_playable_pieces.append(new_rook)
                     
+                    self.change_cords(old_rook, 8, 8, True)
                     self.board[undo.end_row][undo.end_col-1] = ".."
                     self.board[undo.end_row][undo.end_col+1] = new_rook
 
-                elif undo.start_col - undo.end_col == 2:
+                elif undo.start_col - undo.end_col == 2: # queenside castle
                     old_rook = self.board[undo.end_row][undo.end_col+1]
-                    new_rook = self.board[undo.end_row][undo.end_col-2]
-                    self.change_cords(old_rook, 8, 8, True)
+                    new_rook = p.Rook(undo.end_row, undo.start_col -4, self.board, piece_moved.color)
+                    
                     if old_rook.color == "black":
-                        temp = self.pop_piece(old_rook, self.black_playable_pieces)
+                        self.black_playable_pieces.remove(old_rook)
                         self.black_playable_pieces.append(new_rook)
                     else:
-                        temp = self.pop_piece(old_rook, self.white_playable_pieces)
+                        self.white_playable_pieces.remove(old_rook)
                         self.white_playable_pieces.append(new_rook)
+
+                    self.change_cords(old_rook, 8, 8, True)
                     self.board[undo.end_row][undo.end_col+1] = ".."
-                    self.board[undo.end_row][undo.end_col-2] = new_rook
+                    self.board[undo.end_row][undo.start_col-4] = new_rook
 
             #undo castle log
 
@@ -526,19 +551,27 @@ class GameState():
 
     
         if self.white_to_move:
+            print()
             king_row, king_col = self.find_king_pos("white")
+            print("white")
             for piece in self.white_playable_pieces:
+                print(piece)
                 if piece.name == "king":
                     moves += self.get_king_moves(piece)
                 else:
                     moves += piece.possible_moves()
+            print()
         else:
             king_row, king_col = self.find_king_pos("black")
+            print()
+            print("black")
             for piece in self.black_playable_pieces:
+                print(piece)
                 if piece.name == "king":
                     moves += self.get_king_moves(piece)
                 else:
                     moves += piece.possible_moves()
+            print()
 
         #moves = self.get_possible_moves()
 
@@ -637,12 +670,14 @@ class GameState():
         col = king.col
         castle_moves = []
 
+        # checking for kingside castling moves
         if self.white_to_move and self.current_castle_state.white_kingside or \
             not self.white_to_move and self.current_castle_state.black_kingside:
             right_move = self.get_kingside_moves(row, col, king)
             if right_move:
                 castle_moves.append(right_move)
         
+        # checking for queenside castling moves
         if self.white_to_move and self.current_castle_state.white_queenside or \
             not self.white_to_move and self.current_castle_state.black_queenside:
             left_move = self.get_queenside_moves(row, col, king)
@@ -706,7 +741,8 @@ class Move():
         self.is_enpassant = is_enpassant
         self.is_pawn_promotion = self.is_pawn_promo()
         self.is_castle = is_castle
-
+        if self.piece_moved == "..":
+            raise Exception("Piece moved is empty")
     
     def __eq__(self, other):
         if isinstance(other, Move):
