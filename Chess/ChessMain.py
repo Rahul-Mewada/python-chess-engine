@@ -87,6 +87,11 @@ def draw_pieces(screen, board):
             if piece != "..": # not an empty square
                 screen.blit(IMAGES[(piece.color, piece.name)], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
+def draw_text(screen, text):
+    font = p.font.SysFont("Helvetica", 35, True, False)
+    text_object = font.render(text, 0, p.Color('Orange'))
+    text_location = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH/2 - text_object.get_width()/2, HEIGHT/2 - text_object.get_height()/2)
+    screen.blit(text_object, text_location)
 '''
 The main driver for our code, this will handle user input and updating the process
 '''
@@ -103,8 +108,8 @@ def main():
     piece_moves = []
     state.white_to_move = True
     invalid_sq = ()
-    player_one = False # if a human is playing white this will be true. If an AI is playing then this is false
-    player_two = False # same as the above but for black
+    player_one = True # if a human is playing white this will be true. If an AI is playing then this is false
+    player_two = True # same as the above but for black
     game_over = False
     move_made = False
     list_of_moves = state.get_valid_moves()
@@ -193,8 +198,13 @@ def main():
         
         if state.checkmate:
             game_over = True
+            if state.white_to_move:
+                draw_text(screen, "Black Wins")
+            else:
+                draw_text(screen, "White Wins")
         elif state.stalemate:
             game_over = True
+            draw_text(screen, "Stalemate")
 
         clock.tick(MAX_FPS)
         p.display.flip()
