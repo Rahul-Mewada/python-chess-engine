@@ -147,13 +147,6 @@ class GameState():
         self.board[move.end_row][move.end_col] = piece_moved
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
-        print()
-        print("Move Log")
-        print("Piece Moved: " + str(piece_moved.color) + " " + str(piece_moved.name))
-        print("Piece Captured: " + str(piece_captured))
-        print("Moved from " + str((move.start_row, move.start_col)) + " to " + str((move.end_row, move.end_col)))
-        print("Is a test move? " + str(is_test))
-        print()
         if not is_test:
             self.white_to_move = not self.white_to_move
             self.is_first_move = False
@@ -274,13 +267,6 @@ class GameState():
             self.change_cords(piece_moved, undo.start_row, undo.start_col, False)
             self.board[undo.end_row][undo.end_col] = piece_captured
 
-            print()
-            print("Undo Log")
-            print("Piece Moved: " + str(piece_moved.color) + " " + str(piece_moved.name))
-            print("Piece Captured: " + str(piece_captured))
-            print("Moved from " + str((undo.start_row, undo.start_col)) + " to " + str((undo.end_row, undo.end_col)))
-            print("Is a test move? " + str(is_test))
-            print()
 
             if piece_captured != "..":
                 self.change_cords(piece_captured, undo.end_row, undo.end_col, False)
