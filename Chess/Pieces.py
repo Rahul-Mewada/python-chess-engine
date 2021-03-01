@@ -96,6 +96,7 @@ class Pawn(Piece):
         self.color = color
         self.name = "pawn"
         self.special_moves = special_moves
+        self.value = 1
 
     def is_valid_square(self, square):
         row, col = square
@@ -174,6 +175,7 @@ class Knight(Piece):
         super().__init__(row, col, board)
         self.color = color
         self.name = "knight"
+        self.value = 3
 
     '''
     Returns all possible moves that a knight can take. Not accounting for potential checks or checkmates.
@@ -203,7 +205,7 @@ class Bishop(Piece):
         super().__init__(row, col, board)
         self.color = color
         self.name = "bishop"
-
+        self.value = 3
     '''
     Returns all possible moves that a bishop can take. Not accounting for potential checks or checkmates.
     '''
@@ -229,6 +231,7 @@ class Rook(Piece):
         self.color = color
         self.is_empty = False
         self.name = "rook"
+        self.value = 3
         watch(row)
 
     def possible_moves(self):
@@ -251,6 +254,7 @@ class Queen(Piece):
         self.color = color
         self.is_empty = False
         self.name = "queen"
+        self.value = 9
     
     def possible_moves(self):
         possible_moves = []
