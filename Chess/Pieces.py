@@ -101,7 +101,10 @@ class Piece():
     Returns the positional value of a piece using it's piece square table
     '''
     def pos_value(self):
-        return self.piece_square_table[self.row][self.col]
+        if self.color == "white":
+            return self.piece_square_table[self.row][self.col]
+        else:
+            return self.piece_square_table[7 - self.row][self.col]
 
 
 class Pawn(Piece):
@@ -121,14 +124,7 @@ class Pawn(Piece):
             [5, 10, 10,-20,-20, 10, 10,  5],
             [0,  0,  0,  0,  0,  0,  0,  0]
         ]
-    '''
-    Returns the positional value of a piece using it's piece square table
-    '''
-    def pos_value(self):
-        if self.color == "white":
-            return self.piece_square_table[self.row][self.col]
-        else:
-            return self.piece_square_table[7 - self.row][self.col]
+    
 
     def is_valid_square(self, square):
         row, col = square

@@ -147,9 +147,7 @@ class GameState():
         self.board[move.end_row][move.end_col] = piece_moved
         self.change_cords(piece_moved, move.end_row, move.end_col, False) 
         self.move_log.append(move)
-        if not is_test:
-            self.white_to_move = not self.white_to_move
-            self.is_first_move = False
+        
 
 
         if move.is_pawn_promotion:
@@ -228,8 +226,9 @@ class GameState():
                                                 )
                                 )
         if not is_test:
-            #self.debug_print(move)
-            pass
+            self.white_to_move = not self.white_to_move
+            self.is_first_move = False
+
 
     def debug_print(self, move):
         piece_moved = move.piece_moved
@@ -278,6 +277,7 @@ class GameState():
 
             if len(self.move_log) == 0:
                 self.is_first_move = True
+
             if not is_test:
                 self.white_to_move = not self.white_to_move
                 self.redo_move_log.append(undo)
@@ -537,27 +537,19 @@ class GameState():
 
     
         if self.white_to_move:
-            print()
             king_row, king_col = self.find_king_pos("white")
-            print("white")
             for piece in self.white_playable_pieces:
-                print(piece)
                 if piece.name == "king":
                     moves += self.get_king_moves(piece)
                 else:
                     moves += piece.possible_moves()
-            print()
         else:
             king_row, king_col = self.find_king_pos("black")
-            print()
-            print("black")
             for piece in self.black_playable_pieces:
-                print(piece)
                 if piece.name == "king":
                     moves += self.get_king_moves(piece)
                 else:
                     moves += piece.possible_moves()
-            print()
 
         #moves = self.get_possible_moves()
 
@@ -710,14 +702,29 @@ class GameState():
                 return Move((row, col), (row, col-2), self.board, is_castle = True)
         return 
     
-    def evaluate(self):
+    '''
+    Returns the total number of points attributed to a player for a particular board state
+    '''
+    def evaluate_state(self):
         tot_points = 0
-        if self.white_to_move:
-            for piece in self.white_playable_pieces:
-                tot_points += piece.value
-        else:
-            for piece in self.black_playable_pieces:
-                tot_points += piece.value
+        # tuning variable for piece value
+        a = 1  
+        # tuning variable for positional value
+        b = 0
+
+        if self.checkmate:
+            return 10000
+        elif self.stalemate:
+            return 0
+        
+        for piece in self.white_playable_pieces:
+            pos_value = piece.pos_value()
+            tot_points += (a * piece.value + b * pos_value)
+
+        for piece in self.black_playable_pieces:
+            pos_value = piece.pos_value()
+            tot_points -= (a * piece.value + b * pos_value)
+
         return tot_points
 
 class Move():

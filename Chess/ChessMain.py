@@ -109,20 +109,21 @@ def main():
     state.white_to_move = True
     invalid_sq = ()
     player_one = True # if a human is playing white this will be true. If an AI is playing then this is false
-    player_two = True # same as the above but for black
+    player_two = False # same as the above but for black
     game_over = False
     move_made = False
+    is_undo = False
     list_of_moves = state.get_valid_moves()
     while running: 
-
+        #print(state.white_to_move)
         is_human_turn = (state.white_to_move and player_one) or (not state.white_to_move and player_two)
         for e in p.event.get():
             invalid_sq = ()
             if e.type == p.QUIT:
                 running = False
-
             # mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
+                
                 if not game_over and is_human_turn:
                     white_pinned = 0
                     black_pinned = 0
@@ -142,6 +143,12 @@ def main():
                         pass
                     elif len(player_clicks) == 0 and ((not state.white_to_move and state.board[row][col].color == "white") or \
                         (state.white_to_move and state.board[row][col].color == "black")):
+                        print("...........................")
+                        print()
+                        print("Inside invalid sq elif")
+                        print(state.white_to_move)
+                        print(state.board[row][col].color)
+                        print()
                         invalid_sq = (row, col)
                         pass
                     else:
@@ -155,10 +162,11 @@ def main():
                                 if move.start_row == piece_selected.row and move.start_col == piece_selected.col:
                                     piece_moves.append(move)
                             if len(piece_moves) == 0:
+                                for move in list_of_moves:
+                                    piece_moved = move.piece_moved
                                 invalid_sq = (player_clicks[0][0], player_clicks[0][1])
                                 selected_sqaure = ()
                                 player_clicks = []
-
                         if len(player_clicks) == 2:
                             if player_clicks[0] == player_clicks[1]:
                                 pass
@@ -177,19 +185,23 @@ def main():
             #key handler
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: # undo when key 'z' is pressed
+                    i = 0
                     state.undo_move()
+                    move_made = True
+                    is_undo = True
                 if e.key == p.K_x: # redo when key 'x' is pressed
                     state.redo_move()
 
         # AI Move finder logic
-        if not game_over and not is_human_turn:
-            ai_move = bot.find_random_move(list_of_moves)
+        if not game_over and not is_human_turn and not is_undo:
+            ai_move = bot.find_greedy_move(state, list_of_moves)
             state.make_move(ai_move)
             move_made = True
 
         if move_made:
             list_of_moves = state.get_valid_moves()
             move_made = False
+            is_undo = False
 
         #draw_game_state(screen, state)
         draw_board(screen)               # draw squares on the board
