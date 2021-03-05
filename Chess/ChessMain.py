@@ -5,6 +5,7 @@ Main driver file, responsible for handling user input and
 import pygame as p
 import ChessEngine
 import ChessBot as bot
+import time
 p.init()                # initializing pygame
 WIDTH = HEIGHT = 400
 DIMENSION = 8           # dimension of the board is 8 x 8
@@ -108,7 +109,7 @@ def main():
     piece_moves = []
     state.white_to_move = True
     invalid_sq = ()
-    player_one = True # if a human is playing white this will be true. If an AI is playing then this is false
+    player_one = False # if a human is playing white this will be true. If an AI is playing then this is false
     player_two = False # same as the above but for black
     game_over = False
     move_made = False
