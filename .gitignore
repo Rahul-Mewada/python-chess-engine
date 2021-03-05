@@ -1,3 +1,3 @@
 *.pyc
 *.pyo
-/Chess/__pycache__/*
+Chess/__pycache__/*
