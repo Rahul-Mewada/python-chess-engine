@@ -11,8 +11,6 @@ def find_greedy_move(state, valid_moves):
     max_score = -10000 
     best_move = None
     for player_move in valid_moves:
-        print()
-        print("Before making: " + str(state.white_to_move))
         state.make_move(player_move)
         tot_points = state.evaluate_state()  * turn_multiplier
         if tot_points > max_score:
@@ -21,10 +19,6 @@ def find_greedy_move(state, valid_moves):
         state.undo_move()
         move = player_move
         piece = move.piece_moved
-        print("Piece Moved: " + str(piece.color) + str(piece.name))
-        print("Moved from " + str((move.start_row, move.start_col)) + " to " + str((move.end_row, move.end_col)))
-        print("After undoing: " + str(state.white_to_move))
-        print()
     return best_move
 
 def find_minimax_move(state):
