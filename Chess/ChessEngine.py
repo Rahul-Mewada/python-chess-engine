@@ -286,7 +286,7 @@ class GameState():
 
             # update pawn promotion move
             if undo.is_pawn_promotion:
-                replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color)
+                replacement_piece = p.Pawn(undo.start_row, undo.start_col, self.board, piece_moved.color, self.special_move_mem)
                 self.board[undo.start_row][undo.start_col] = replacement_piece
                 # adding the pawn to the pieces on the board
                 if replacement_piece.color == "white":
@@ -712,11 +712,6 @@ class GameState():
         # tuning variable for positional value
         b = 0.1
 
-        if self.checkmate:
-            return 10000
-        elif self.stalemate:
-            return 0
-        
         for piece in self.white_playable_pieces:
             pos_value = piece.pos_value()
             tot_points += (a * piece.value + b * pos_value)

@@ -109,7 +109,7 @@ def main():
     piece_moves = []
     state.white_to_move = True
     invalid_sq = ()
-    player_one = False # if a human is playing white this will be true. If an AI is playing then this is false
+    player_one = True # if a human is playing white this will be true. If an AI is playing then this is false
     player_two = False # same as the above but for black
     game_over = False
     move_made = False
@@ -195,7 +195,7 @@ def main():
 
         # AI Move finder logic
         if not game_over and not is_human_turn and not is_undo:
-            ai_move = bot.find_greedy_move(state, list_of_moves)
+            ai_move = bot.find_minimax_move(state, list_of_moves)
             state.make_move(ai_move)
             move_made = True
 
