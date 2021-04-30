@@ -5,7 +5,7 @@ class GameState():
     def __init__(self):
         # starting position using the FEN notation
         self.board = self.fen_to_board(
-            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
 
     def fen_to_board(self, fen_string):
         """
@@ -18,17 +18,18 @@ class GameState():
         row, col = 0, 0
         for char in fen_string:
             if char.isnumeric():
-                row += int(char)
-                if row >= 8:
-                    row = 0
+                col += int(char)
+                if col >= 8:
+                    col = 0
             elif char == '/':
-                col += 1
-                row = 0
+                row += 1
+                col = 0
             else:
                 color = 'white' if char.isupper() else 'black'
-                piece = self.args_to_piece(char.lower(), row, col, color)
+                piece = GameState.args_to_piece(self, char.lower(), row, col,
+                                                color)
                 board[row][col] = piece
-                row += 1
+                col += 1
         return board
 
     def args_to_piece(self, key, row, col, color):
