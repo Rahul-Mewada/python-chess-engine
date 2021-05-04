@@ -45,3 +45,9 @@ class GameState():
             'k': Pieces.King(row, col, color)
         }
         return letter_to_piece[key]
+
+
+class Move():
+    def __init__(self, start_sq, end_sq):
+        self.start_sq = start_sq
+        self.end_sq = end_sq
