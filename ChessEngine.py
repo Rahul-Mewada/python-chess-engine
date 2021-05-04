@@ -55,19 +55,37 @@ class GameState():
         start_row, start_col = move.start_sq
         end_row, end_col = move.end_sq
         piece_to_move = self.board[start_row][start_col]
-        piece_removed = self.board[end_row][end_col]
         if piece_to_move.is_empty:
-            raise Exception("Piece to move is an empty piece")
+            raise Exception("Piece to move is an empty piece (make_move)")
         else:
             piece_to_move.row = end_row
             piece_to_move.col = end_col
             self.board[end_row][end_col] = piece_to_move
             self.board[start_row][start_col] = Pieces.EmptyPiece(start_row,
                                                                  start_col)
-            del piece_removed
             if switch_turns:
                 self.white_to_move = not self.white_to_move
                 self.move_log.append(move)
+
+    def undo_move(self):
+        """
+        Undos the last made move
+        """
+        move = self.move_log.pop()
+        piece_moved = move.piece_to_move
+        piece_to_add = move.piece_removed
+        ex_start_row, ex_start_col = move.start_sq
+        ex_end_row, ex_end_col = move.end_sq
+        if piece_moved.is_empty:
+            raise Exception("Piece moved is an empty piece (undo_move)")
+        else:
+            piece_moved.row = ex_start_row
+            piece_moved.col = ex_start_col
+            piece_to_add.row = ex_end_row
+            piece_to_add.col = ex_end_col
+
+            self.board[ex_start_row][ex_start_col] = piece_moved
+            self.board[ex_end_row][ex_end_col] = piece_to_add
 
 
 class Move():
