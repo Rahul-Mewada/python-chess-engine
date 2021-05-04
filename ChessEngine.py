@@ -6,6 +6,8 @@ class GameState():
         # starting position using the FEN notation
         self.board = self.fen_to_board(
             'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
+        self.move_log = []
+        self.white_to_move = True
 
     def fen_to_board(self, fen_string):
         """
@@ -46,8 +48,33 @@ class GameState():
         }
         return letter_to_piece[key]
 
+    def make_move(self, move, switch_turns):
+        """
+        Moves a piece from the start square to the end square
+        """
+        start_row, start_col = move.start_sq
+        end_row, end_col = move.end_sq
+        piece_to_move = self.board[start_row][start_col]
+        piece_removed = self.board[end_row][end_col]
+        if piece_to_move.is_empty:
+            raise Exception("Piece to move is an empty piece")
+        else:
+            piece_to_move.row = end_row
+            piece_to_move.col = end_col
+            self.board[end_row][end_col] = piece_to_move
+            self.board[start_row][start_col] = Pieces.EmptyPiece(start_row,
+                                                                 start_col)
+            del piece_removed
+            if switch_turns:
+                self.white_to_move = not self.white_to_move
+                self.move_log.append(move)
+
 
 class Move():
     def __init__(self, start_sq, end_sq):
         self.start_sq = start_sq
         self.end_sq = end_sq
+        start_row, start_col = self.start_sq
+        end_row, end_col = self.end_sq
+        self.piece_to_move = self.board[start_row][start_col]
+        self.piece_removed = self.board[end_row][end_col]
