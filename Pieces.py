@@ -45,3 +45,4 @@ class King():
     def __init__(self, row, col, color):
         EmptyPiece.__init__(self, row, col)
         self.is_empty = False
+        self.color = color

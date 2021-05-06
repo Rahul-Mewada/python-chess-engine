@@ -1,5 +1,6 @@
 import pygame
 import ChessEngine
+import Pieces
 pygame.init()
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -14,10 +15,27 @@ def load_images():
     """
     pieces = ['wP', 'wR', 'wN', 'wB', 'wQ', 'wK', 'bP', 'bR', 'bN', 'bB', 'bQ',
               'bK']
-    for piece in pieces:    
+    for piece in pieces:
         IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/"
                                                + piece + ".png"),
                                                (SQ_SIZE, SQ_SIZE))
+
+
+def piece_to_image(piece):
+    type_to_string = {
+        Pieces.Pawn: 'P',
+        Pieces.Rook: 'R',
+        Pieces.Knight: 'N',
+        Pieces.Bishop: 'B',
+        Pieces.Queen: 'Q',
+        Pieces.King: 'K'
+    }
+    if piece.is_empty:
+        raise Exception('Piece is empty when it shouldnt be')
+    else:
+        color = 'w' if piece.color == 'white' else 'b'
+        piece_type = type(piece)
+        return IMAGES[color + type_to_string[piece_type]]
 
 
 def main():
@@ -32,6 +50,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        draw_gamestate(screen, state)
         clock.tick(MAX_FPS)
         pygame.display.flip()
 
@@ -61,6 +80,14 @@ def draw_pieces(screen, board):
     """
     Draws the pieces on the board
     """
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+            if not piece.is_empty:
+                piece_image = piece_to_image(piece)
+                screen.blit(piece_image,
+                            pygame.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE,
+                                        SQ_SIZE))
 
 
 if __name__ == '__main__':
