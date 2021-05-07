@@ -58,8 +58,8 @@ class GameState():
         piece_to_move = self.board[start_row][start_col]
         if piece_to_move.is_empty:
             raise Exception("Piece to move is an empty piece (make_move)")
-        elif not utils.is_in_bounds(move.start_sq) or \
-                not utils.is_in_bounds(move.end_sq):
+        elif not utils.in_bounds(move.start_sq) or \
+                not utils.in_bounds(move.end_sq):
             raise Exception("Start or end square are not in bounds")
         else:
             piece_to_move.row = end_row
@@ -82,8 +82,8 @@ class GameState():
         ex_end_row, ex_end_col = move.end_sq
         if piece_moved.is_empty:
             raise Exception("Piece moved is an empty piece (undo_move)")
-        elif not self.is_in_bounds(move.start_sq) or \
-                not self.is_in_bounds(move.end_sq):
+        elif not utils.in_bounds(move.start_sq) or \
+                not utils.in_bounds(move.end_sq):
             raise Exception("Start or end square not in bounds")
         else:
             piece_moved.row = ex_start_row
