@@ -75,7 +75,10 @@ class GameState():
         """
         Undos the last made move
         """
-        move = self.move_log.pop()
+        if self.move_log:
+            move = self.move_log.pop()
+        else:
+            return
         piece_moved = move.piece_to_move
         piece_to_add = move.piece_removed
         ex_start_row, ex_start_col = move.start_sq

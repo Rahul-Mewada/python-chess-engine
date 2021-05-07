@@ -74,6 +74,9 @@ def main():
                     state.make_move(move, True)
                     sq_selected = ()
                     player_clicks = []
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_z:
+                    state.undo_move()
         draw_gamestate(screen, state)
         clock.tick(MAX_FPS)
         pygame.display.flip()
