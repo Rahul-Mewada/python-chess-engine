@@ -47,6 +47,8 @@ def main():
     clock = pygame.time.Clock()
     screen.fill(pygame.Color("white"))
     state = ChessEngine.GameState()
+    valid_moves = state.get_valid_moves()
+    move_made = False
     load_images()
     # keeps track of the last click of the user
     sq_selected = ()
@@ -71,12 +73,19 @@ def main():
                 if len(player_clicks) == 2:
                     move = ChessEngine.Move(player_clicks[0], player_clicks[1],
                                             state.board)
-                    state.make_move(move, True)
+                    for m in valid_moves:
+                        if m.id == move.id:
+                            move_made = True
+                            state.make_move(move, True)
                     sq_selected = ()
                     player_clicks = []
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:
                     state.undo_move()
+                    move_made = True
+        if move_made:
+            valid_moves = state.get_valid_moves()
+            move_made = False
         draw_gamestate(screen, state)
         clock.tick(MAX_FPS)
         pygame.display.flip()

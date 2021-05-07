@@ -20,3 +20,11 @@ def valid_board(board):
             if piece.row != row or piece.col != col:
                 return False
     return True
+
+
+def has_enemy(color, board, square):
+    """
+    Returns true if there is an enemy piece on the square
+    """
+    row, col = square
+    return (not board[row][col].is_empty and color != board[row][col].color)

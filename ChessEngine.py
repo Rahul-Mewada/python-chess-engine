@@ -4,11 +4,13 @@ import utils
 
 class GameState():
     def __init__(self):
+        self.move_log = []
+        self.white_to_move = True
+        self.black_pieces = []
+        self.white_pieces = []
         # starting position using the FEN notation
         self.board = self.fen_to_board(
             'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
-        self.move_log = []
-        self.white_to_move = True
 
     def fen_to_board(self, fen_string):
         """
@@ -31,6 +33,8 @@ class GameState():
                 color = 'white' if char.isupper() else 'black'
                 piece = GameState.args_to_piece(self, char.lower(), row, col,
                                                 color)
+                self.black_pieces.append(piece) if color == 'black' else \
+                    self.white_pieces.append(piece)
                 board[row][col] = piece
                 col += 1
         return board
@@ -70,6 +74,10 @@ class GameState():
             if switch_turns:
                 self.white_to_move = not self.white_to_move
                 self.move_log.append(move)
+            if not move.piece_removed.is_empty:
+                captured = move.piece_removed
+                self.black_pieces.remove(captured) if captured.color == \
+                    'black' else self.white_pieces.remove(captured)
 
     def undo_move(self):
         """
@@ -96,6 +104,19 @@ class GameState():
 
             self.board[ex_start_row][ex_start_col] = piece_moved
             self.board[ex_end_row][ex_end_col] = piece_to_add
+            if not piece_to_add.is_empty:
+                self.black_pieces.append(piece_to_add) if piece_to_add.color \
+                    == 'black' else self.white_pieces.append(piece_to_add)
+
+    def get_valid_moves(self):
+        return self.get_all_moves()
+
+    def get_all_moves(self):
+        moves = []
+        pieces = self.white_pieces if self.white_to_move else self.black_pieces
+        for piece in pieces:
+            moves += piece.valid_moves(self.board)
+        return moves
 
 
 class Move():
@@ -106,3 +127,10 @@ class Move():
         end_row, end_col = self.end_sq
         self.piece_to_move = board[start_row][start_col]
         self.piece_removed = board[end_row][end_col]
+        self.id = start_row*1000 + start_col*100 + end_row*10 \
+            + end_col
+
+    def __eqs__(self, other):
+        if isinstance(other, Move):
+            return self.id == other.id
+        return False
