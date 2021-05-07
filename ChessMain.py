@@ -2,7 +2,7 @@ import pygame
 import ChessEngine
 import Pieces
 pygame.init()
-WIDTH = HEIGHT = 512
+WIDTH = HEIGHT = 400
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
@@ -22,6 +22,9 @@ def load_images():
 
 
 def piece_to_image(piece):
+    """
+    Takes a Piece and returns its corresponding image
+    """
     type_to_string = {
         Pieces.Pawn: 'P',
         Pieces.Rook: 'R',
@@ -45,11 +48,32 @@ def main():
     screen.fill(pygame.Color("white"))
     state = ChessEngine.GameState()
     load_images()
+    # keeps track of the last click of the user
+    sq_selected = ()
+    # keeps track of the player clicks [(), ()]
+    player_clicks = []
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                location = pygame.mouse.get_pos()
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sq_selected == (row, col):
+                    # the user clicked the same square twice
+                    sq_selected = ()
+                    player_clicks = []
+                else:
+                    sq_selected = (row, col)
+                    player_clicks.append(sq_selected)
+                if len(player_clicks) == 2:
+                    move = ChessEngine.Move(player_clicks[0], player_clicks[1],
+                                            state.board)
+                    state.make_move(move, True)
+                    sq_selected = ()
+                    player_clicks = []
         draw_gamestate(screen, state)
         clock.tick(MAX_FPS)
         pygame.display.flip()

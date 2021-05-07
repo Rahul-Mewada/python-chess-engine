@@ -57,6 +57,9 @@ class GameState():
         piece_to_move = self.board[start_row][start_col]
         if piece_to_move.is_empty:
             raise Exception("Piece to move is an empty piece (make_move)")
+        elif not self.is_in_bounds(move.start_sq) or \
+                not self.is_in_bounds(move.end_sq):
+            raise Exception("Start or end square are not in bounds")
         else:
             piece_to_move.row = end_row
             piece_to_move.col = end_col
@@ -78,6 +81,9 @@ class GameState():
         ex_end_row, ex_end_col = move.end_sq
         if piece_moved.is_empty:
             raise Exception("Piece moved is an empty piece (undo_move)")
+        elif not self.is_in_bounds(move.start_sq) or \
+                not self.is_in_bounds(move.end_sq):
+            raise Exception("Start or end square not in bounds")
         else:
             piece_moved.row = ex_start_row
             piece_moved.col = ex_start_col
@@ -87,12 +93,21 @@ class GameState():
             self.board[ex_start_row][ex_start_col] = piece_moved
             self.board[ex_end_row][ex_end_col] = piece_to_add
 
+    def is_in_bounds(self, square):
+        """
+        Returns true if a square is in bounds of a chess board
+        """
+        row, col = square
+        if 0 <= row < 8 and 0 <= col < 8:
+            return True
+        return False
+
 
 class Move():
-    def __init__(self, start_sq, end_sq):
+    def __init__(self, start_sq, end_sq, board):
         self.start_sq = start_sq
         self.end_sq = end_sq
         start_row, start_col = self.start_sq
         end_row, end_col = self.end_sq
-        self.piece_to_move = self.board[start_row][start_col]
-        self.piece_removed = self.board[end_row][end_col]
+        self.piece_to_move = board[start_row][start_col]
+        self.piece_removed = board[end_row][end_col]
