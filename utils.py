@@ -28,3 +28,19 @@ def has_enemy(color, board, square):
     """
     row, col = square
     return (not board[row][col].is_empty and color != board[row][col].color)
+
+
+def is_empty(board, square):
+    """
+    Returns true if the square on the board has no pieces
+    """
+    row, col = square
+    if board[row][col].is_empty:
+        return True
+
+
+def has_friendly(color, board, square):
+    """
+    Returns true if the square has a piece of the same color
+    """
+    return not is_empty(board, square) and not has_enemy(color, board, square)
