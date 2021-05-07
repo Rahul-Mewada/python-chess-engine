@@ -127,7 +127,7 @@ class Move():
         end_row, end_col = self.end_sq
         self.piece_to_move = board[start_row][start_col]
         self.piece_removed = board[end_row][end_col]
-        self.id = start_row*1000 + start_col*100 + end_row*10 \
+        self.id = start_row * 1000 + start_col * 100 + end_row * 10 \
             + end_col
 
     def __eqs__(self, other):
