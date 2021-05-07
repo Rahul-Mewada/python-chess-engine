@@ -22,6 +22,7 @@ class Pawn(EmptyPiece):
         self.can_enpassant = True
 
     def valid_moves(self, board):
+        """ Returns a list of valid moves that a piece can make"""
         row, col = self.row, self.col
         moves = []
         end_sqs_dict = {}
@@ -63,6 +64,7 @@ class Rook():
         self.color = color
 
     def valid_moves(self, board):
+        """ Returns a list of valid moves that a piece can make """
         return []
 
 
@@ -73,6 +75,7 @@ class Bishop():
         self.color = color
 
     def valid_moves(self, board):
+        """ Returns a list of moves that a piece can make """
         return []
 
 
@@ -83,7 +86,31 @@ class Knight():
         self.color = color
 
     def valid_moves(self, board):
-        return []
+        """ Returns a list of moves that a piece can make """
+        row, col = self.row, self.col
+        end_sqs = [
+            (row + 2, col + 1),
+            (row + 2, col - 1),
+            (row - 2, col + 1),
+            (row - 2, col - 1),
+            (row + 1, col + 2),
+            (row + 1, col - 2),
+            (row - 1, col + 2),
+            (row - 1, col - 2)
+        ]
+        moves = []
+        for end_sq in end_sqs:
+            if self.valid_sq(board, end_sq):
+                move = ChessEngine.Move((self.row, self.col), end_sq, board)
+                moves.append(move)
+        return moves
+
+    def valid_sq(self, board, sq):
+        row, col = sq
+        if utils.in_bounds(sq) and \
+                not utils.has_friendly(self.color, board, sq):
+            return True
+        return False
 
 
 class Queen():
@@ -93,6 +120,7 @@ class Queen():
         self.color = color
 
     def valid_moves(self, board):
+        """ Returns a list of moves that a piece can make """
         return []
 
 
@@ -103,4 +131,5 @@ class King():
         self.color = color
 
     def valid_moves(self, board):
+        """ Returns a list of moves that a piece can make """
         return []
