@@ -151,7 +151,22 @@ class King(EmptyPiece):
         EmptyPiece.__init__(self, row, col)
         self.is_empty = False
         self.color = color
+        self.directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1),
+                           (-1, -1), (1, -1), (-1, 1)]
 
     def valid_moves(self, board):
         """ Returns a list of moves that a piece can make """
-        return []
+        end_sqs = [(self.row + d_row, self.col + d_col)
+                   for d_row, d_col in self.directions
+                   if self.valid_square(board,
+                   (self.row + d_row, self.col + d_col))]
+        moves = [ChessEngine.Move((self.row, self.col), sq, board)
+                 for sq in end_sqs]
+        return moves
+
+    def valid_square(self, board, square):
+        """ Returns true if a king piece can move to the square """
+        if utils.in_bounds(square) and \
+                not utils.has_friendly(self.color, board, square):
+            return True
+        return False
