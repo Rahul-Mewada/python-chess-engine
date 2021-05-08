@@ -14,6 +14,42 @@ class EmptyPiece():
         return self.id == other.id
 
 
+class SlidingPiece(EmptyPiece):
+    def __init__(self, row, col, directions, color):
+        EmptyPiece.__init__(self, row, col)
+        self.is_empty = False
+        self.directions = directions
+        self.color = color
+
+    def valid_moves(self, board):
+        """ Returns the valid moves for sliding pieces """
+        row, col = self.row, self.col
+        moves = []
+        for direction in self.directions:
+            d_row, d_col = direction
+            end_row, end_col = row, col
+            while True:
+                end_row += d_row
+                end_col += d_col
+                end_sq = (end_row, end_col)
+                if self.valid_square(board, end_sq):
+                    move = ChessEngine.Move((self.row, self.col),
+                                            end_sq, board)
+                    moves.append(move)
+                else:
+                    break
+        return moves
+
+    def valid_square(self, board, square):
+        """ Returns true if the square is a valid square for sliding pieces """
+        if utils.in_bounds(square) and (utils.is_empty(board, square) or
+                                        utils.has_enemy(self.color,
+                                                        board,
+                                                        square)):
+            return True
+        return False
+
+
 class Pawn(EmptyPiece):
     def __init__(self, row, col, color):
         EmptyPiece.__init__(self, row, col)
@@ -57,29 +93,19 @@ class Pawn(EmptyPiece):
         return moves
 
 
-class Rook():
+class Rook(SlidingPiece):
     def __init__(self, row, col, color):
-        EmptyPiece.__init__(self, row, col)
-        self.is_empty = False
-        self.color = color
-
-    def valid_moves(self, board):
-        """ Returns a list of valid moves that a piece can make """
-        return []
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        SlidingPiece.__init__(self, row, col, directions, color)
 
 
-class Bishop():
+class Bishop(SlidingPiece):
     def __init__(self, row, col, color):
-        EmptyPiece.__init__(self, row, col)
-        self.is_empty = False
-        self.color = color
-
-    def valid_moves(self, board):
-        """ Returns a list of moves that a piece can make """
-        return []
+        directions = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
+        SlidingPiece.__init__(self, row, col, directions, color)
 
 
-class Knight():
+class Knight(EmptyPiece):
     def __init__(self, row, col, color):
         EmptyPiece.__init__(self, row, col)
         self.is_empty = False
@@ -100,12 +126,12 @@ class Knight():
         ]
         moves = []
         for end_sq in end_sqs:
-            if self.valid_sq(board, end_sq):
+            if self.valid_square(board, end_sq):
                 move = ChessEngine.Move((self.row, self.col), end_sq, board)
                 moves.append(move)
         return moves
 
-    def valid_sq(self, board, sq):
+    def valid_square(self, board, sq):
         row, col = sq
         if utils.in_bounds(sq) and \
                 not utils.has_friendly(self.color, board, sq):
@@ -113,18 +139,14 @@ class Knight():
         return False
 
 
-class Queen():
+class Queen(SlidingPiece):
     def __init__(self, row, col, color):
-        EmptyPiece.__init__(self, row, col)
-        self.is_empty = False
-        self.color = color
-
-    def valid_moves(self, board):
-        """ Returns a list of moves that a piece can make """
-        return []
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1),
+                      (-1, -1), (1, -1), (-1, 1)]
+        SlidingPiece.__init__(self, row, col, directions, color)
 
 
-class King():
+class King(EmptyPiece):
     def __init__(self, row, col, color):
         EmptyPiece.__init__(self, row, col)
         self.is_empty = False
