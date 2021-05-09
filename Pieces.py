@@ -9,6 +9,7 @@ class EmptyPiece():
         self.row = row
         self.col = col
         self.id = shortuuid.uuid()
+        self.is_sliding = False
 
     def __eqs__(self, other):
         return self.id == other.id
@@ -20,6 +21,7 @@ class SlidingPiece(EmptyPiece):
         self.is_empty = False
         self.directions = directions
         self.color = color
+        self.is_sliding = True
 
     def valid_moves(self, board):
         """ Returns the valid moves for sliding pieces """
@@ -95,13 +97,13 @@ class Pawn(EmptyPiece):
 
 class Rook(SlidingPiece):
     def __init__(self, row, col, color):
-        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        directions = utils.type_to_direction(type(self))
         SlidingPiece.__init__(self, row, col, directions, color)
 
 
 class Bishop(SlidingPiece):
     def __init__(self, row, col, color):
-        directions = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
+        directions = utils.type_to_direction(type(self))
         SlidingPiece.__init__(self, row, col, directions, color)
 
 
@@ -141,8 +143,7 @@ class Knight(EmptyPiece):
 
 class Queen(SlidingPiece):
     def __init__(self, row, col, color):
-        directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1),
-                      (-1, -1), (1, -1), (-1, 1)]
+        directions = utils.type_to_direction(type(self))
         SlidingPiece.__init__(self, row, col, directions, color)
 
 
