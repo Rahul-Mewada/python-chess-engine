@@ -1,3 +1,14 @@
+import Pieces
+
+
+def type_to_direction(typee):
+    direction_dict = {
+        Pieces.Rook: [(1, 0), (-1, 0), (0, 1), (0, -1)],
+        Pieces.Bishop: [(1, 1), (-1, -1), (1, -1), (-1, 1)],
+        Pieces.Queen: [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1),
+                       (-1, -1), (1, -1), (-1, 1)],
+    }
+    return direction_dict[typee]
 
 
 def in_bounds(square):
@@ -10,15 +21,38 @@ def in_bounds(square):
     return False
 
 
-def valid_board(board):
+def validate_state(state):
     """
     Returns true if the pieces match their position on the board
     """
+    print('Validate state called')
+    board = state.board
+    white_pieces = state.white_pieces
+    black_pieces = state.black_pieces
     for row in range(8):
         for col in range(8):
             piece = board[row][col]
             if piece.row != row or piece.col != col:
-                return False
+                raise Exception('Coords dont match')
+
+    for piece in black_pieces:
+        board_piece = board[piece.row][piece.col]
+        if type(board_piece) != type(piece):
+            raise Exception('Types dont match')
+        elif board_piece.color != piece.color:
+            raise Exception('Piece colors dont match')
+        elif board_piece.row != piece.row or board_piece.col != piece.col:
+            raise Exception('Coords dont match')
+
+    for piece in white_pieces:
+        board_piece = board[piece.row][piece.col]
+        if type(board_piece) != type(piece):
+            raise Exception('Types dont match')
+        elif board_piece.color != piece.color:
+            raise Exception('Piece colors dont match')
+        elif board_piece.row != piece.row or board_piece.col != piece.col:
+            raise Exception('Coords dont match')
+
     return True
 
 
@@ -44,3 +78,10 @@ def has_friendly(color, board, square):
     Returns true if the square has a piece of the same color
     """
     return not is_empty(board, square) and not has_enemy(color, board, square)
+
+
+def find_king(pieces):
+    for piece in pieces:
+        if type(piece) == Pieces.King:
+            return piece
+    raise Exception("Couldn't find king")
