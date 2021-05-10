@@ -86,16 +86,40 @@ def main():
         if move_made:
             valid_moves = state.get_valid_moves()
             move_made = False
-        draw_gamestate(screen, state)
+        draw_gamestate(screen, state, valid_moves, sq_selected)
         clock.tick(MAX_FPS)
         pygame.display.flip()
 
 
-def draw_gamestate(screen, state):
+def highlight_squares(screen, state, valid_moves, sq_selected):
+    """
+    Highlights the square selected and valid_moves
+    that a piece can make
+    """
+    if sq_selected:
+        r, c = sq_selected
+        piece = state.board[r][c]
+        if not piece.is_empty and \
+                piece.color == ('white' if state.white_to_move else 'black'):
+            s = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            s.set_alpha(100)
+            s.fill(pygame.Color('blue'))
+            screen.blit(s, (c * SQ_SIZE, r * SQ_SIZE))
+            s.fill(pygame.Color('yellow'))
+            for move in valid_moves:
+                start_row, start_col = move.start_sq
+                end_row, end_col = move.end_sq
+                if start_row == r and start_col == c:
+                    screen.blit(s, (SQ_SIZE * end_col,
+                                    SQ_SIZE * end_row))
+
+
+def draw_gamestate(screen, state, valid_moves, sq_selected):
     """
     Responsible for all graphics within current gamestate
     """
     draw_board_squares(screen)
+    highlight_squares(screen, state, valid_moves, sq_selected)
     draw_pieces(screen, state.board)
 
 
