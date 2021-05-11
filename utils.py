@@ -81,7 +81,14 @@ def has_friendly(color, board, square):
 
 
 def find_king(pieces):
+    """ Return the king from a list of pieces """
     for piece in pieces:
         if type(piece) == Pieces.King:
             return piece
     raise Exception("Couldn't find king")
+
+
+def reverse_direction(direction):
+    """ Returns the reverse of the direction provided """
+    row, col = direction
+    return (row * -1, col * -1)
